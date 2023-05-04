@@ -1,0 +1,16 @@
+export const ETHEREUM = 1;
+export const GOERLI = 5;
+export const OPTIMISM = 10;
+export const OPTIMISM_GOERLI = 420;
+export const ARBITRUM = 42161;
+export const ARBITRUM_GOERLI = 421613;
+export const POLYGON = 137;
+export const MUMBAI = 80001;
+export const BSC = 56;
+export const BSC_TESTNET = 97;
+export const AVALANCHE = 43114;
+export const FUJI = 43113;
+export const FANTOM = 250;
+export const FANTOM_TESTNET = 4002;
+export const MAINNET_CHAIN_IDS = [ETHEREUM, OPTIMISM, ARBITRUM, POLYGON, BSC, AVALANCHE, FANTOM];
+export const TESTNET_CHAIN_IDS = [GOERLI, OPTIMISM_GOERLI, ARBITRUM_GOERLI, MUMBAI, BSC_TESTNET, FUJI, FANTOM_TESTNET];
