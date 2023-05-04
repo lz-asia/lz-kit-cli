@@ -37,8 +37,10 @@ echo "🔥 Contracts deployed"
 if [[ "$CONFIG" && "$MNEMONIC" ]]; then
   forks=( "${networks[@]/%/-fork}" )
   lz-kit config "$CONFIG" --mnemonic "$MNEMONIC" --networks "${forks[@]}"
+  echo "🔥 Configuration done"
+else
+  echo "ℹ️ Skipping configuration (if you want it, specify --config option)"
 fi
-echo "🔥 Configuration done"
 
 echo "==============================================================================="
 echo "🎉 Bootstrap completed but DO NOT TERMINATE this process"
