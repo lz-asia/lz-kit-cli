@@ -1,6 +1,6 @@
 import fs from "fs";
 import { execSync } from "child_process";
-import { Contract, getAddress, JsonRpcProvider, Provider, Wallet } from "ethers";
+import { Contract, getAddress, JsonRpcProvider, Provider, Wallet, NonceManager } from "ethers";
 import { abi as abiLzApp } from "../constants/artifacts/LzApp.json";
 import { abi as abiEndpoint } from "../constants/artifacts/Endpoint.json";
 import { HttpNetworkUserConfig, NetworksConfig } from "hardhat/types";
@@ -13,7 +13,7 @@ const config = async (contractName: string, options: Record<string, string>) => 
     const networks = JSON.parse(data.substring(start, end + 1)) as NetworksConfig;
     for (const network of options.networks) {
         try {
-            const signer = Wallet.fromPhrase(options.mnemonic, getProvider(networks, network));
+            const signer = new NonceManager(Wallet.fromPhrase(options.mnemonic, getProvider(networks, network)));
             const lzApp = new Contract(getDeploymentAddress(contractName, network), abiLzApp, signer);
             for (const remoteNetwork of options.networks) {
                 if (remoteNetwork == network) continue;
