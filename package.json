@@ -14,6 +14,8 @@
     "./*": "./dist/*.js"
   },
   "files": [
+    "abis",
+    "contracts",
     "dist",
     "scripts",
     "src"
@@ -58,6 +60,7 @@
   },
   "dependencies": {
     "@layerzerolabs/scan-client": "^0.0.0-beta.6",
+    "@openzeppelin/contracts": "^4.8.3",
     "ansi-colors": "^4.1.3",
     "ethers": "^6.3.0",
     "loading-cli": "^1.1.0"
