@@ -59,7 +59,11 @@ const getDeploymentAddress = (contractName: string, network: string) => {
 const getLZChainId = async (lzAppAddress: string, provider: Provider) => {
     const lzApp = new Contract(lzAppAddress, abiLzApp, provider);
     const endpoint = new Contract(await lzApp.lzEndpoint(), abiEndpoint, provider);
-    return await endpoint.chainId();
+    let chainId = (await endpoint.chainId()).toNumber();
+    if (chainId < 100) {
+        chainId += 100;
+    }
+    return chainId;
 };
 
 export default config;
