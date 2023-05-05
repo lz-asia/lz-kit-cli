@@ -19,11 +19,15 @@ yarn add @lz-asia/lz-kit
 ```
 
 ### Usage
+
 You need to import `@lz-asia/lz-kit/hardhat-plugin` in your `hardhat.config.js` or `hardhat.config.ts`:
+
 ```shell
 import "@lz-asia/lz-kit/hardhat-plugin";
 ```
+
 or
+
 ```shell
 require("@lz-asia/lz-kit/hardhat-plugin");
 ```
@@ -88,6 +92,7 @@ lz-kit relayer optimism-fork ethereum-fork
 ```
 
 ### Configuring Trusted Remotes
+
 It sets trusted remotes for all combinations for given networks. The target contract must be a subclass of LzApp.
 
 ```shell
@@ -105,8 +110,9 @@ Options:
 ```
 
 ### Bootstrapping Forked Networks
+
 It first `lz-kit fork` networks and `lz-kit relayer` for them. Then it executes `hardhat deploy` and `lz-kit config` for forked networks.
-(It has dependency on `hardhat-deploy` plugin. Also you need to import `@lz-asia/lz-kit/hardhat-plugin` in your `hardhat.config.js` or `hardhat.config.ts`).
+(It has dependency on `hardhat-deploy` plugin. Also you need to import `@lz-asia/lz-kit/hardhat-plugin` in your `hardhat.config.js` or `hardhat.config.js`).
 
 ```shell
 Usage: lz-kit bootstrap [options] <networks...>
@@ -119,6 +125,7 @@ Arguments:
 Options:
   -m, --mnemonic <string>  mnemonic for accounts
   -k, --key <string>       infura api key
+  -b, --balance <string>   balance for first account
   -w, --wait <number>      seconds to wait for forks to finish (default: 7)
   -c, --config <string>    LZApp name for config
   -h, --help               display help for command

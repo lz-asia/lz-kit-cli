@@ -25,6 +25,14 @@ for src in "${networks[@]}"; do
 done
 echo "🔥 All relayers are up"
 
+# Set balance for first account
+if [[ "$BALANCE" ]]; then
+  for network in "${networks[@]}"; do
+    echo "⌛️ setting balance for $network-fork"
+     NETWORK="$network-fork" MNEMONIC="$MNEMONIC" BALANCE="$BALANCE" hardhat run --no-compile "$( dirname -- "$BASH_SOURCE" )"/set-balance.js
+  done
+fi
+
 # Deploy contracts to forks
 hardhat compile
 for network in "${networks[@]}"; do

@@ -35,6 +35,7 @@ async function main() {
         .argument("<networks...>", "networks to bootstrap")
         .requiredOption("-m, --mnemonic <string>", "mnemonic for accounts")
         .requiredOption("-k, --key <string>", "infura api key")
+        .option("-b, --balance <string>", "balance for first account")
         .option("-w, --wait <number>", "seconds to wait for forks to finish (default: 7)")
         .option("-c, --config <string>", "LZApp name for config")
         .action(bootstrapForks);
