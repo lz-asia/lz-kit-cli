@@ -15,19 +15,15 @@ const relayer = async (network: string, options: Record<string, string>) => {
         console.log(`${network}:\tlistening...`);
         await node.on(node.filters.Packet(), async event => {
             try {
-                const { ua, localChainId, remoteChainId, remoteAddress, nonce, payload } = parseData(event.args[0]);
-                console.log(`${network}:\temit Packet(${ua}, ${remoteChainId}, ${remoteAddress}, ${nonce} ${payload})`);
-                const remoteUa = remoteAddress.substring(0, 42);
-                const remoteNetwork = getNetwork(remoteChainId);
+                const { srcChainId, srcUA, destChainId, destUA, nonce, payload } = parsePacket(event.args[0]);
+                const remoteNetwork = getNetwork(destChainId);
                 const { signer } = await init(remoteNetwork);
-                const lzApp = new Contract(remoteUa, abiLzApp, signer);
-                const tx = await lzApp.lzReceive(localChainId, ua + remoteUa.substring(2), nonce, payload);
+                const lzApp = new Contract(destUA, abiLzApp, signer);
+                const tx = await lzApp.lzReceive(srcChainId, srcUA + destUA.substring(2), nonce, payload);
                 console.log(
-                    `${remoteNetwork}:\tsent lzReceive(${remoteChainId}, ${remoteAddress}, ${nonce}, ${payload})}`
+                    `${remoteNetwork}:\tlzReceive(${srcChainId}, ${srcUA + destUA.substring(2)}, ${nonce}, ${payload})}`
                 );
                 console.log(remoteNetwork + "\t" + tx.hash);
-                const receipt = await tx.wait();
-                console.log(remoteNetwork + "\t" + JSON.stringify(receipt, null, 2));
             } catch (e) {
                 console.trace(e);
             }
@@ -101,15 +97,15 @@ const getNodeContract = async (provider: Provider, chainId: number, node?: strin
     return new Contract(address as string, abiNode, provider);
 };
 
-const parseData = (data: string) => {
+const parsePacket = (data: string) => {
     const parser = new HexParser(data);
     const nonce = parser.nextInt(8);
-    const localChainId = parser.nextInt(2);
-    const ua = parser.nextHexString(20);
-    const remoteChainId = parser.nextInt(2);
-    const remoteAddress = parser.nextHexString(40);
+    const srcChainId = parser.nextInt(2);
+    const srcUA = parser.nextHexString(20);
+    const destChainId = parser.nextInt(2);
+    const destUA = parser.nextHexString(20);
     const payload = parser.nextHexString();
-    return { nonce, localChainId, ua, remoteChainId, remoteAddress, payload };
+    return { nonce, srcChainId, srcUA, destChainId, destUA, payload };
 };
 
 class HexParser {
