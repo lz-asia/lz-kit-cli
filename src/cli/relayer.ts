@@ -19,10 +19,8 @@ const relayer = async (network: string, options: Record<string, string>) => {
                 console.log(`${network}:\temit Packet(${ua}, ${remoteChainId}, ${remoteAddress}, ${nonce} ${payload})`);
                 const remoteUa = remoteAddress.substring(0, 42);
                 const remoteNetwork = getNetwork(remoteChainId);
-                const { chainId, provider, signer } = await init(remoteNetwork);
-                console.log(remoteChainId, remoteAddress, remoteNetwork, chainId, await provider.getNetwork());
+                const { signer } = await init(remoteNetwork);
                 const lzApp = new Contract(remoteUa, abiLzApp, signer);
-                console.log(localChainId, ua + remoteUa.substring(2), nonce, payload);
                 const tx = await lzApp.lzReceive(localChainId, ua + remoteUa.substring(2), nonce, payload);
                 console.log(
                     `${remoteNetwork}:\tsent lzReceive(${remoteChainId}, ${remoteAddress}, ${nonce}, ${payload})}`
