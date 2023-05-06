@@ -68,7 +68,7 @@ lz-kit fork fantom -k 84842078b09946638c03157f83405213
 
 ### Running Relayers
 
-It runs a relayer that read events from `<source network>` and submit proof to run the receiver function on `<destination network>`.
+It runs a relayer that read events from `<source network>` and calls `lzReceive()` of UA contracts on the destination chain.
 
 ```shell
 Usage: lz-kit relayer [options] <ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom> <ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom>
@@ -77,18 +77,16 @@ Spin up a relayer
 
 Arguments:
   ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom  source network
-  ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom  destination network
 
 Options:
   --node <string>                                          UltraLightNode contract for source network
   -h, --help                                               display help for command
 ```
 
-An example to run bidirectional relayers between Forked Ethereum and Forked Optimism:
+An example to run a relayer on forked Ethereum:
 
 ```shell
-lz-kit relayer ethereum-fork optimism-fork &&
-lz-kit relayer optimism-fork ethereum-fork
+lz-kit relayer ethereum
 ```
 
 ### Configuring Trusted Remotes

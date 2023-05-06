@@ -19,7 +19,6 @@ async function main() {
         .command("relayer")
         .description("Spin up a relayer")
         .argument("ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom", "source network")
-        .argument("ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom", "destination network")
         .option("--node <string>", "UltraLightNode contract for source network")
         .action(relayer);
     program

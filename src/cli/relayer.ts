@@ -1,53 +1,57 @@
 import { Contract, JsonRpcProvider, JsonRpcSigner, WeiPerEther, Provider } from "ethers";
 import { abi as abiEndpoint } from "../constants/artifacts/Endpoint.json";
 import { abi as abiNode } from "../constants/artifacts/UltraLightNodeV2.json";
-import { abi as abiReceiver } from "../constants/artifacts/ILayerZeroReceiver.json";
+import { abi as abiLzApp } from "../constants/artifacts/LzApp.json";
 import { endpoint } from "../constants/layerzero.json";
-import { getProvider, setDefaultApiKey } from "../providers";
+import { getProvider } from "../providers";
 import { ARBITRUM, AVALANCHE, BSC, ETHEREUM, FANTOM, OPTIMISM, POLYGON } from "../constants";
-import { logStack, logInfo } from "../utils";
 
 const BASE_PORT = 8000;
 
-const relayer = async (srcNetwork: string, destNetwork: string, options: Record<string, string>) => {
+const relayer = async (network: string, options: Record<string, string>) => {
     try {
-        const { srcChainId, srcProvider, destChainId, destProvider } = await init(srcNetwork, destNetwork, options);
-        const node = await getNodeContract(srcProvider, srcChainId - BASE_PORT, options.node);
-        const signer = await getImpersonatedSigner(destProvider, destChainId - BASE_PORT);
-        logInfo("relayer listening on " + srcNetwork + "...");
-        await node.on(node.filters.Packet(), event => {
+        const { chainId, provider } = await init(network);
+        const node = await getNodeContract(provider, chainId - BASE_PORT, options.node);
+        console.log(`${network}:\tlistening...`);
+        await node.on(node.filters.Packet(), async event => {
             try {
-                const { ua, remoteChainId, remoteAddress, nonce, payload } = parseData(event.args[0]);
-                const receiver = new Contract(ua, abiReceiver, signer);
-                receiver
-                    .lzReceive(remoteChainId, remoteAddress, nonce, payload)
-                    .then(tx => console.log(tx.hash))
-                    .catch(e => console.error(e));
+                const { ua, localChainId, remoteChainId, remoteAddress, nonce, payload } = parseData(event.args[0]);
+                console.log(`${network}:\temit Packet(${ua}, ${remoteChainId}, ${remoteAddress}, ${nonce} ${payload})`);
+                const remoteUa = remoteAddress.substring(0, 42);
+                const remoteNetwork = getNetwork(remoteChainId);
+                const { chainId, provider, signer } = await init(remoteNetwork);
+                console.log(remoteChainId, remoteAddress, remoteNetwork, chainId, await provider.getNetwork());
+                const lzApp = new Contract(remoteUa, abiLzApp, signer);
+                console.log(localChainId, ua + remoteUa.substring(2), nonce, payload);
+                const tx = await lzApp.lzReceive(localChainId, ua + remoteUa.substring(2), nonce, payload);
+                console.log(
+                    `${remoteNetwork}:\tsent lzReceive(${remoteChainId}, ${remoteAddress}, ${nonce}, ${payload})}`
+                );
+                console.log(remoteNetwork + "\t" + tx.hash);
+                const receipt = await tx.wait();
+                console.log(remoteNetwork + "\t" + JSON.stringify(receipt, null, 2));
             } catch (e) {
-                logStack(e);
+                console.trace(e);
             }
         });
     } catch (e) {
-        logStack(e);
+        console.trace(e);
     }
 };
 
-const init = async (srcNetwork: string, destNetwork: string, options: Record<string, string>) => {
-    if (options.key) {
-        setDefaultApiKey(options.key);
-    }
-    const srcChainId = options.srcChainId ? Number(options.srcChainId) : getChainId(srcNetwork);
-    const srcProvider = getProvider(
-        srcChainId,
-        options.srcRpcUrl || "http://127.0.0.1:" + getChainId(srcNetwork) + "/"
-    );
-    const destChainId = options.destChainId ? Number(options.destChainId) : getChainId(destNetwork);
-    const destProvider = getProvider(
-        destChainId,
-        options.destRpcUrl || "http://127.0.0.1:" + getChainId(destNetwork) + "/"
-    );
+const init = async (network: string) => {
+    const chainId = getChainId(network);
+    const provider = getProvider(chainId, "http://127.0.0.1:" + chainId + "/");
+    const signer = await getImpersonatedSigner(provider, chainId - BASE_PORT);
 
-    return { srcChainId, srcProvider, destChainId, destProvider };
+    return { chainId, provider, signer };
+};
+
+const getImpersonatedSigner = async (provider: JsonRpcProvider, chainId: number) => {
+    const endpointAddr = (endpoint as Record<string, string>)[chainId.toString()];
+    await provider.send("hardhat_impersonateAccount", [endpointAddr]);
+    await provider.send("hardhat_setBalance", [endpointAddr, "0x" + (WeiPerEther * 10000n).toString(16)]);
+    return new JsonRpcSigner(provider, endpointAddr);
 };
 
 const getChainId = (network: string) => {
@@ -71,6 +75,24 @@ const getChainId = (network: string) => {
     }
 };
 
+const getNetwork = (lzChainId: number) => {
+    const network = (
+        {
+            101: "ethereum",
+            102: "bsc",
+            106: "avalanche",
+            109: "polygon",
+            110: "arbitrum",
+            111: "optimism",
+            112: "fantom",
+        } as Record<number, string>
+    )[lzChainId];
+    if (!network) {
+        throw new Error("unsupported chainId " + lzChainId);
+    }
+    return network;
+};
+
 const getNodeContract = async (provider: Provider, chainId: number, node?: string) => {
     if (node) {
         return new Contract(node as string, abiNode, provider);
@@ -81,13 +103,6 @@ const getNodeContract = async (provider: Provider, chainId: number, node?: strin
     return new Contract(address as string, abiNode, provider);
 };
 
-const getImpersonatedSigner = async (provider: JsonRpcProvider, chainId: number) => {
-    const endpointAddr = (endpoint as Record<string, string>)[chainId.toString()];
-    await provider.send("hardhat_impersonateAccount", [endpointAddr]);
-    await provider.send("hardhat_setBalance", [endpointAddr, "0x" + (WeiPerEther * 10000n).toString(16)]);
-    return new JsonRpcSigner(provider, endpointAddr);
-};
-
 const parseData = (data: string) => {
     const parser = new HexParser(data);
     const nonce = parser.nextInt(8);
@@ -96,7 +111,6 @@ const parseData = (data: string) => {
     const remoteChainId = parser.nextInt(2);
     const remoteAddress = parser.nextHexString(40);
     const payload = parser.nextHexString();
-    console.log(nonce, localChainId, ua, remoteAddress, payload);
     return { nonce, localChainId, ua, remoteChainId, remoteAddress, payload };
 };
 

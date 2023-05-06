@@ -4,7 +4,6 @@ import { Contract, getAddress, JsonRpcProvider, Provider, Wallet, NonceManager }
 import { abi as abiLzApp } from "../constants/artifacts/LzApp.json";
 import { abi as abiEndpoint } from "../constants/artifacts/Endpoint.json";
 import { HttpNetworkUserConfig, NetworksConfig } from "hardhat/types";
-import { logFailure } from "../utils";
 
 const config = async (contractName: string, options: Record<string, string>) => {
     const data = execSync(`hardhat run ` + __dirname + "/../../scripts/hardhat-networks.js").toString();
@@ -12,6 +11,7 @@ const config = async (contractName: string, options: Record<string, string>) => 
     const end = data.lastIndexOf("}");
     const networks = JSON.parse(data.substring(start, end + 1)) as NetworksConfig;
     for (const network of options.networks) {
+        console.log(`configuring ${network}`);
         try {
             const signer = new NonceManager(Wallet.fromPhrase(options.mnemonic, getProvider(networks, network)));
             const lzApp = new Contract(getDeploymentAddress(contractName, network), abiLzApp, signer);
@@ -23,18 +23,18 @@ const config = async (contractName: string, options: Record<string, string>) => 
                         const remoteChainId = await getLZChainId(remote, getProvider(networks, remoteNetwork));
                         const current = await lzApp.trustedRemoteLookup(remoteChainId);
                         if (current != "0x" && getAddress(current.substring(0, 42)) == getAddress(remote)) {
-                            console.log("👉  reusing trusted remote for " + remoteNetwork);
+                            console.log("reusing trusted remote for " + remoteNetwork + "(" + current + ")");
                         } else {
                             await lzApp.setTrustedRemoteAddress(remoteChainId, remote);
-                            console.log("✅  updated trusted remote for " + remoteNetwork);
+                            console.log("updated trusted remote for " + remoteNetwork + "(" + remote + ")");
                         }
                     } catch (e) {
-                        logFailure((e as Error).message);
+                        console.trace(e);
                     }
                 }
             }
         } catch (e) {
-            logFailure((e as Error).message);
+            console.trace(e);
         }
     }
 };

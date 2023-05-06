@@ -13,15 +13,10 @@ echo "🔥 Networks forked"
 
 # Run relayers
 mkdir -p .logs/relayers
-for src in "${networks[@]}"; do
-  for dest in "${networks[@]}"; do
-    if [[ "$src" == "$dest" ]]; then
-      continue
-    fi
-    echo "⌛️ running a relayer from $src-fork to $dest-fork"
-    logfile=".logs/relayers/$src-fork-$dest-fork.log"
-    lz-kit relayer "$src" "$dest" 1>"$logfile" 2>"$logfile" &
-  done
+for network in "${networks[@]}"; do
+  echo "⌛️ running a relayer for $network-fork"
+  logfile=".logs/relayers/$network-fork.log"
+  lz-kit relayer "$network" 1>"$logfile" 2>"$logfile" &
 done
 echo "🔥 All relayers are up"
 

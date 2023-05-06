@@ -1,7 +1,6 @@
 import fs from "fs";
 import { exec } from "child_process";
 import { ARBITRUM, AVALANCHE, BSC, ETHEREUM, FANTOM, OPTIMISM, POLYGON } from "../constants";
-import { logStack, logFailure } from "../utils";
 
 const fork = async (network: string, options: Record<string, string>) => {
     try {
@@ -37,7 +36,7 @@ const fork = async (network: string, options: Record<string, string>) => {
                 config = getConfig(chainId, `https://rpc.ftm.tools/`);
                 break;
             default:
-                logFailure("network " + network + " not supported");
+                console.error("network " + network + " not supported");
                 return;
         }
 
@@ -51,7 +50,7 @@ const fork = async (network: string, options: Record<string, string>) => {
         child.stdout?.on("data", data => process.stdout.write(data));
         child.stderr?.on("data", data => process.stderr.write(data));
     } catch (e) {
-        logStack((e as Error).message);
+        console.trace(e);
     }
 };
 
