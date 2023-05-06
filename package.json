@@ -1,6 +1,6 @@
 {
   "name": "@lz-asia/lz-kit",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "LayerZero Kit",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
