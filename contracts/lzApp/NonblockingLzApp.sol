@@ -23,9 +23,9 @@ abstract contract NonblockingLzApp is LzApp {
     // overriding the virtual function in LzReceiver
     function _blockingLzReceive(
         uint16 _srcChainId,
-        bytes memory _srcAddress,
+        bytes calldata _srcAddress,
         uint64 _nonce,
-        bytes memory _payload
+        bytes calldata _payload
     ) internal virtual override {
         (bool success, bytes memory reason) = address(this).excessivelySafeCall(
             gasleft(),
@@ -63,9 +63,9 @@ abstract contract NonblockingLzApp is LzApp {
     //@notice override this function
     function _nonblockingLzReceive(
         uint16 _srcChainId,
-        bytes memory _srcAddress,
+        bytes calldata _srcAddress,
         uint64 _nonce,
-        bytes memory _payload
+        bytes calldata _payload
     ) internal virtual;
 
     function retryMessage(
