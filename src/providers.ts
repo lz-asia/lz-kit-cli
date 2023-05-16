@@ -1,5 +1,5 @@
 import { AVALANCHE, FANTOM, FANTOM_TESTNET, FUJI } from "./constants";
-import { EnsPlugin, EtherscanPlugin, GasCostPlugin, InfuraProvider, JsonRpcProvider, Network } from "ethers";
+import { EnsPlugin, EtherscanPlugin, GasCostPlugin, InfuraProvider, JsonRpcProvider, Network } from "ethers6";
 
 let defaultApiKey: string;
 

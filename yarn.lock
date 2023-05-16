@@ -1720,6 +1720,11 @@
   resolved "https://registry.yarnpkg.com/@types/minimist/-/minimist-1.2.1.tgz#283f669ff76d7b8260df8ab7a4262cc83d988256"
   integrity sha512-fZQQafSREFyuZcdWFAExYjBiCL7AUCdgsk80iO0q4yihYYdcIiH28CcuPTGFgLOCC8RlW49GSQxdHwZP+I7CNg==
 
+"@types/mocha@^10.0.1":
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/@types/mocha/-/mocha-10.0.1.tgz#2f4f65bb08bc368ac39c96da7b2f09140b26851b"
+  integrity sha512-/fvYntiO1GeICvqbQ3doGDIP97vWmvFt83GKguJ6prmQM2iXZfFcq6YE8KteFyRtX2/h5Hf91BYvPodJKFYv5Q==
+
 "@types/node@*":
   version "14.14.28"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.28.tgz#cade4b64f8438f588951a6b35843ce536853f25b"
@@ -3031,7 +3036,19 @@ ethereumjs-util@^6.0.0, ethereumjs-util@^6.2.1:
     ethjs-util "0.1.6"
     rlp "^2.2.3"
 
-ethers@^5.7.1:
+"ethers6@npm:ethers@^6.3.0":
+  version "6.3.0"
+  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.3.0.tgz#c61efaafa2bd9a4d9f0c799d932ef3b5cd4bd37d"
+  integrity sha512-CKFYvTne1YT4S1glTiu7TgGsj0t6c6GAD7evrIk8zbeUb6nK8dcUPAiAWM8uDX/1NmRTvLM9+1Vnn49hwKtEzw==
+  dependencies:
+    "@adraffy/ens-normalize" "1.9.0"
+    "@noble/hashes" "1.1.2"
+    "@noble/secp256k1" "1.7.1"
+    aes-js "4.0.0-beta.3"
+    tslib "2.4.0"
+    ws "8.5.0"
+
+ethers@^5.7.1, ethers@^5.7.2:
   version "5.7.2"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.7.2.tgz#3a7deeabbb8c030d4126b24f84e525466145872e"
   integrity sha512-wswUsmWo1aOK8rR7DIKiWSw9DbLWe6x98Jrn8wcTflTVvaXhAMaB5zGAXy0GYQEQp9iO1iSHWVyARQm11zUtyg==
@@ -3066,18 +3083,6 @@ ethers@^5.7.1:
     "@ethersproject/wallet" "5.7.0"
     "@ethersproject/web" "5.7.1"
     "@ethersproject/wordlists" "5.7.0"
-
-ethers@^6.3.0:
-  version "6.3.0"
-  resolved "https://registry.yarnpkg.com/ethers/-/ethers-6.3.0.tgz#c61efaafa2bd9a4d9f0c799d932ef3b5cd4bd37d"
-  integrity sha512-CKFYvTne1YT4S1glTiu7TgGsj0t6c6GAD7evrIk8zbeUb6nK8dcUPAiAWM8uDX/1NmRTvLM9+1Vnn49hwKtEzw==
-  dependencies:
-    "@adraffy/ens-normalize" "1.9.0"
-    "@noble/hashes" "1.1.2"
-    "@noble/secp256k1" "1.7.1"
-    aes-js "4.0.0-beta.3"
-    tslib "2.4.0"
-    ws "8.5.0"
 
 ethjs-util@0.1.6, ethjs-util@^0.1.6:
   version "0.1.6"
@@ -5813,7 +5818,7 @@ ts-jest@^29.1.0:
     semver "7.x"
     yargs-parser "^21.0.1"
 
-ts-node@^10.8.1:
+ts-node@^10.8.1, ts-node@^10.9.1:
   version "10.9.1"
   resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.9.1.tgz#e73de9102958af9e1f0b168a6ff320e25adcff4b"
   integrity sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==
@@ -5911,15 +5916,10 @@ type-fest@^0.8.1:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.8.1.tgz#09e249ebde851d3b1e48d27c105444667f17b83d"
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
-"typescript@^4.6.4 || ^5.0.0":
+"typescript@^4.6.4 || ^5.0.0", typescript@^5.0.4:
   version "5.0.4"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.0.4.tgz#b217fd20119bd61a94d4011274e0ab369058da3b"
   integrity sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==
-
-typescript@^4.9.0:
-  version "4.9.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
-  integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==
 
 undici@^5.14.0:
   version "5.22.0"

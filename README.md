@@ -6,131 +6,212 @@ This package was created with the aim of boosting productivity for developers wh
 
 ## Getting Started
 
+### Prerequisites
+
+#### Hardhat
+
+LZ Kit was designed for a `hardhat` project so if you didn't setup hardhat, follow this [tutorial](https://hardhat.org/tutorial/creating-a-new-hardhat-project) first.
+
+#### Hardhat Deploy
+
+You also need `hardhat-deploy` plugin to run `lz-kit test`. Follow this [link](https://www.npmjs.com/package/hardhat-deploy) to install it.
+
 ### Install
 
 ```shell
-npm install @lz-asia/lz-kit
+npm install -g @lz-asia/lz-kit
+```
+
+You need to import `@lz-asia/lz-kit/hardhat` in your `hardhat.config.js` or `hardhat.config.ts`:
+
+```shell
+import "@lz-asia/lz-kit/hardhat";
 ```
 
 or
 
 ```shell
-yarn add @lz-asia/lz-kit
+require("@lz-asia/lz-kit/hardhat");
 ```
 
 ### Usage
 
-You need to import `@lz-asia/lz-kit/hardhat-plugin` in your `hardhat.config.js` or `hardhat.config.ts`:
+Write a cross chain contract e.g. `MyLzApp`:
 
-```shell
-import "@lz-asia/lz-kit/hardhat-plugin";
+```solidity
+// contracts/MyLzApp.sol
+
+pragma solidity ^0.8.0;
+
+import "@layerzerolabs/solidity-examples/contracts/lzApp/LzApp.sol";
+
+contract MyLzApp {
+  constructor(address _lzEndpoint) LzApp(_lzEndpoint) {}
+
+  // ... send and receive functions
+}
 ```
 
-or
+Deployment script is needed:
 
-```shell
-require("@lz-asia/lz-kit/hardhat-plugin");
+```typescript
+// deploy/00_MyLzApp.ts
+
+import { constants } from "ethers";
+import { endpoint } from "../constants/layerzero.json";
+
+export default async ({ getNamedAccounts, deployments, network }) => {
+  const { deploy } = deployments;
+  const { deployer } = await getNamedAccounts();
+
+  await deploy("MyLzApp", {
+    from: deployer,
+    args: [endpoint[network.name]],
+    log: true,
+  });
+};
 ```
 
-## lz-kit tasks
+Write a sample test script:
 
-`lz-kit` is a CLI that supports forking and running relayers.
+```typescript
+// test/MyLzApp.test.ts
 
-### Forking Mainnets
+import { utils } from "ethers";
+import { srcChain, destChain } from "hardhat";
+
+describe("MyLzApp", function () {
+  before(async function () {
+    this.src = srcChain;
+    this.dest = destChain;
+  });
+
+  it("should test", async function () {
+    // your testing code
+  });
+});
+```
+
+Set environment variables for reuse:
+
+```shell
+INFURA_API_KEY=<your infura api key>
+MNEMONIC=<your seed phrase>
+```
+
+Bootstrap ethereum, arbitrum and run cross chain tests:
+
+```shell
+lz-kit bootstrap -k "$INFURA_API_KEY" --mnemonic "$MNEMONIC" --balance 10000 --accounts 3 ethereum optimism arbitrum &&
+lz-kit test -s ethereum-fork -d arbitrum-fork --mnemonic "$MNEMONIC" --deploy --config MyLzApp
+```
+
+## Reference
+
+### lz-kit fork
 
 It runs a `hardhat node` that forks a network at `http://127.0.0.1:<port>`.
+Default port is 8000 + <Chain ID> (e.g. ethereum-fork: 8001, arbitrum-fork: 50161)
+
+An example to fork ethereum and arbitrum:
 
 ```shell
-Usage: lz-kit fork [options] <ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom>
-
-Fork a mainnet network
-
-Arguments:
-  ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom  network to fork
-
-Options:
-  -k, --key <string>                                       infura api key
-  -p, --port <number>                                      port of json rpc
-  -h, --help                                               display help for command
+lz-kit fork ethereum -k "$INFURA_API_KEY" &&
+lz-kit fork optimism -k "$INFURA_API_KEY" &&
+lz-kit fork arbitrum -k "$INFURA_API_KEY"
 ```
 
-An example to run multiple networks at once:
+After forking, you'll see new config files under `hardhat-configs/`. We recommend you to add below to your `.gitignore`:
+
+```gitignore
+hardhat-configs/
+```
+
+As long as you keep those config files under `hardhat-configs/`, you have three additional hardhat networks `ethereum-fork`, `optimism-fork` and `arbitrum-fork` that you can use for testing, even if you didn't specify in your `hardhat.config.js` or `hardhat.config.ts`.
+
+### lz-kit relayer
+
+It runs a relayer that read events from `<source network>` and calls `lzReceive()` of UA contracts on the destination networks.
+
+An example to run relayer on three forked networks:
 
 ```shell
-lz-kit fork ethereum -k 84842078b09946638c03157f83405213 &&
-lz-kit fork optimism -k 84842078b09946638c03157f83405213 &&
-lz-kit fork arbitrum -k 84842078b09946638c03157f83405213 &&
-lz-kit fork polygon -k 84842078b09946638c03157f83405213 &&
-lz-kit fork bsc -k 84842078b09946638c03157f83405213 &&
-lz-kit fork avalanche -k 84842078b09946638c03157f83405213 &&
-lz-kit fork fantom -k 84842078b09946638c03157f83405213
+lz-kit relayer ethereum-fork --dest arbitrum-fork optimism-fork &&
+lz-kit relayer optimism-fork --dest ethereum-fork arbitrum-fork &&
+lz-kit relayer arbitrum-fork --dest ethereum-fork optimism-fork
 ```
 
-### Running Relayers
+Option `--dest` needs to be placed at the end of the command because it accepts variable number of networks.
 
-It runs a relayer that read events from `<source network>` and calls `lzReceive()` of UA contracts on the destination chain.
+### lz-bootstrap
+
+It first `lz-kit fork` networks, `lz-kit relayer` for them and sets balance for the first account of each network if needed.
+
+An example to bootstrap all networks, set balance of three accounts of each network to 10000 ETH:
 
 ```shell
-Usage: lz-kit relayer [options] <ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom> <ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom>
-
-Spin up a relayer
-
-Arguments:
-  ethereum|optimism|arbitrum|polygon|bsc|avalanche|fantom  source network
-
-Options:
-  --node <string>                                          UltraLightNode contract for source network
-  -h, --help                                               display help for command
+lz-kit bootstrap -k "$INFURA_API_KEY" --mnemonic "$MNEMONIC" --balance 10000 --accounts 3 ethereum optimism arbitrum
 ```
 
-An example to run a relayer on forked Ethereum:
+Network names need to be placed at the end of the command because it accepts variable number of networks.
 
-```shell
-lz-kit relayer ethereum
-```
-
-### Configuring Trusted Remotes
+### lz-kit config
 
 It sets trusted remotes for all combinations for given networks. The target contract must be a subclass of LzApp.
 
+An example to config all forked networks:
+
 ```shell
-Usage: lz-kit config [options] <string>
-
-Set trustedRemotes for LZApp contracts
-
-Arguments:
-  string                        LZApp name
-
-Options:
-  -m, --mnemonic <string>       mnemonic for accounts
-  -n, --networks <networks...>  networks to config
-  -h, --help                    display help for command
+lz-kit config --mnemonic "$MNEMONIC" ethereum-fork optimism-fork arbitrum-fork
 ```
 
-### Bootstrapping Forked Networks
+Option `--mnemonic` specifies which account to be used when calling `setTrustedRemoteAddress()`.
 
-It first `lz-kit fork` networks and `lz-kit relayer` for them. Then it executes `hardhat deploy` and `lz-kit config` for forked networks.
-(It has dependency on `hardhat-deploy` plugin. Also you need to import `@lz-asia/lz-kit/hardhat-plugin` in your `hardhat.config.js` or `hardhat.config.js`).
+### lz-kit test
+
+It deploys and configures contracts if needed and run `hardhat test` with additional HRE objects `srcChain` and `destChain`.
+
+It has dependency on `hardhat-deploy` plugin. Also you need to import `@lz-asia/lz-kit/hardhat-plugin` in your `hardhat.config.js` or `hardhat.config.js`.
+
+An example to test cross chain contract on all combinations of forked networks:
 
 ```shell
-Usage: lz-kit bootstrap [options] <networks...>
-
-Fork, run relayers, deploy contracts and config them for given networks
-
-Arguments:
-  networks                 networks to bootstrap
-
-Options:
-  -m, --mnemonic <string>  mnemonic for accounts
-  -k, --key <string>       infura api key
-  -b, --balance <string>   balance for first account
-  -w, --wait <number>      seconds to wait for forks to finish (default: 7)
-  -c, --config <string>    LZApp name for config
-  -h, --help               display help for command
+lz-kit test -s ethereum-fork -d optimism-fork --mnemonic "$MNEMONIC" --deploy --config MyLzApp &&
+lz-kit test -s ethereum-fork -d arbitrum-fork --mnemonic "$MNEMONIC" --deploy --config MyLzApp &&
+lz-kit test -s optimism-fork -d ethereum-fork --mnemonic "$MNEMONIC" --deploy --config MyLzApp &&
+lz-kit test -s optimism-fork -d arbitrum-fork --mnemonic "$MNEMONIC" --deploy --config MyLzApp &&
+lz-kit test -s arbitrum-fork -d ethereum-fork --mnemonic "$MNEMONIC" --deploy --config MyLzApp &&
+lz-kit test -s arbitrum-fork -d optimism-fork --mnemonic "$MNEMONIC" --deploy --config MyLzApp
 ```
 
-An example to bootstrap all networks.
+In your test script, you can access `srcChain` and `destChain` as HRE objects. For example:
 
-```shell
-lz-kit bootstrap -k 84842078b09946638c03157f83405213 ethereum optimism arbitrum polygon bsc avalanche fantom
+```typescript
+import { utils } from "ethers";
+import { srcChain, destChain } from "hardhat";
+
+describe("MyLzApp", function () {
+  before(async function () {
+    this.src = srcChain;
+    this.dest = destChain;
+  });
+
+  it("should test", async function () {
+    const [deployer, alice, bob, carol] = this.src.signers;
+  });
+});
+```
+
+`Chain` object is defined as below:
+
+```typescript
+import { HttpNetworkConfig } from "hardhat/types";
+import { providers, Signer } from "ethers";
+
+interface Chain {
+  name: string;
+  config: HttpNetworkConfig;
+  provider: providers.JsonRpcProvider;
+  signers: Array<Signer>;
+}
 ```
