@@ -7,6 +7,14 @@ interface ForkedNetwork {
     forkBlockHash: string;
 }
 
+export const getForkedChainId = async (provider: JsonRpcProvider) => {
+    let chainId = (await getForkedNetwork(provider))?.chainId;
+    if (!chainId) {
+        chainId = await getChainId(provider);
+    }
+    return chainId;
+};
+
 export const getChainId = async (provider: JsonRpcProvider) => {
     return parseInt(await provider.send("eth_chainId", []), 16);
 };

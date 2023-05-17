@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
 import { HttpNetworkConfig, NetworksConfig } from "hardhat/types";
 import fs from "fs";
+import { Deployment } from "hardhat-deploy/dist/types";
 
 export const getHardhatNetworkConfig = (name: string) => {
     const data = execSync(`hardhat run ` + __dirname + "/../../scripts/hardhat-networks.js").toString();
@@ -20,11 +21,10 @@ export const getHardhatNetworkConfig = (name: string) => {
     return config as HttpNetworkConfig;
 };
 
-export const getDeploymentAddress = (network: string, contractName: string) => {
+export const getDeployment = (network: string, contractName: string) => {
     const path = "deployments/" + network + "/" + contractName + ".json";
     if (!fs.existsSync(path)) {
-        throw new Error("Cannot find deployment in " + network);
+        throw new Error("Cannot find deployment in " + network + " for " + contractName);
     }
-    const { address } = JSON.parse(fs.readFileSync(path, { encoding: "utf-8" }));
-    return address;
+    return JSON.parse(fs.readFileSync(path, { encoding: "utf-8" })) as Deployment;
 };

@@ -1,12 +1,15 @@
 import "hardhat/types/runtime";
 import { HttpNetworkConfig } from "hardhat/types";
-import { providers, Signer } from "ethers";
+import { BigNumberish, Contract, providers, Signer, Wallet } from "ethers";
 
 export interface Chain {
     name: string;
     config: HttpNetworkConfig;
     provider: providers.JsonRpcProvider;
-    signers: Array<Signer>;
+    signers: Array<Wallet>;
+    getImpersonatedSigner: (address: string, balance?: BigNumberish) => Promise<Signer>;
+    getContract: <T extends Contract>(name: string, signer?: Signer) => Promise<T>;
+    getContractAt: <T extends Contract>(nameOrAbi: string | unknown[], address: string, signer?: Signer) => Promise<T>;
 }
 
 declare module "hardhat/types/runtime" {
