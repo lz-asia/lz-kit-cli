@@ -6,6 +6,7 @@ import relayer from "./relayer";
 import bootstrap from "./bootstrap";
 import config from "./config";
 import test from "./test";
+import deploy from "./deploy";
 
 async function main() {
     program.name("lz-kit").description("Cli tool for LayerZero development").version("0.1.0");
@@ -38,8 +39,15 @@ async function main() {
         .description("Set trustedRemotes for deployed LZApp contracts")
         .argument("<name...>", "Contract name(s) that extended LZApp")
         .requiredOption("-n, --networks <network...>", "networks to config")
-        .option("-m, --mnemonic <string>", "mnemonic for accounts")
+        .option("--mnemonic <string>", "mnemonic for accounts")
         .action(config);
+    program
+        .command("deploy")
+        .description("Deploy contracts and configure them if needed")
+        .requiredOption("-n, --networks <network...>", "networks to config")
+        .option("--mnemonic <string>", "mnemonic for accounts")
+        .option("--config <name...>", "LZApp name(s) for config")
+        .action(deploy);
     program
         .command("test")
         .description("Test LzApp contracts")
