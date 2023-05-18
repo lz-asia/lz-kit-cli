@@ -37,9 +37,11 @@ const relayer = async (src: string, options: Options) => {
         );
         const { stream } = createWriteStream(".logs/relayers", src + ".log");
         stream.write(`${src}:\tlistening...\n`);
-        await srcNode.on(srcNode.filters.Packet(), async event => {
+        await srcNode.on("*", async event => {
+            if (event.fragment.name != "Packet") return;
             try {
                 const { srcChainId, srcUA, destChainId, destUA, nonce, payload } = parsePacket(event.args[0]);
+                stream.write(`${src}:\tPacket(${srcChainId}, ${srcUA}, ${destChainId}, ${destUA}, ${nonce})\n`);
                 const dest = destNetworks.find(({ lzChainId }) => destChainId == lzChainId);
                 if (!dest) {
                     stream.write(`${src}:\tunknown destination chain ${destChainId}\n`);
@@ -48,18 +50,18 @@ const relayer = async (src: string, options: Options) => {
                 const lzApp = new Contract(destUA, abiLzApp, dest.signer);
                 const tx = await lzApp.lzReceive(srcChainId, srcUA + destUA.substring(2), nonce, payload);
                 stream.write(
-                    `${dest}:\tlzReceive(${srcChainId}, ${srcUA + destUA.substring(2)}, ${nonce}, ${payload})}\n`
+                    `${dest.name}:\tlzReceive(${srcChainId}, ${srcUA + destUA.substring(2)}, ${nonce}, ${payload})}\n`
                 );
-                stream.write(dest + "\ttxHash: " + tx.hash + "\n");
+                stream.write(dest.name + ":\ttxHash: " + tx.hash + "\n");
             } catch (e) {
                 if (e instanceof Error) {
                     const stack = (e as Error).stack;
                     if (stack) {
-                        stream.write(stack + "\n");
+                        stream.write(src + ":\t" + stack + "\n");
                         return;
                     }
                 }
-                stream.write(e + "\n");
+                stream.write(src + ":\t" + e + "\n");
             }
         });
         console.log(`Relayer is up for ${src}, check logs at .logs/relayers/${src}.log`);
