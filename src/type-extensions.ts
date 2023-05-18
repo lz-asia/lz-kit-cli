@@ -1,13 +1,18 @@
 import "hardhat/types/runtime";
 import { HttpNetworkConfig } from "hardhat/types";
-import { BigNumberish, Contract, providers, Signer, Wallet } from "ethers";
+import { BigNumberish, Contract, providers, Signer } from "ethers";
+
+export interface SignerWithAddress extends Signer {
+    address: string;
+}
 
 export interface Chain {
     name: string;
     config: HttpNetworkConfig;
     provider: providers.JsonRpcProvider;
-    signers: Array<Wallet>;
-    getImpersonatedSigner: (address: string, balance?: BigNumberish) => Promise<Signer>;
+    getSigners: () => Promise<Array<SignerWithAddress>>;
+    getSigner: (address: string) => Promise<SignerWithAddress>;
+    getImpersonatedSigner: (address: string, balance?: BigNumberish) => Promise<SignerWithAddress>;
     getContract: <T extends Contract>(name: string, signer?: Signer) => Promise<T>;
     getContractAt: <T extends Contract>(nameOrAbi: string | unknown[], address: string, signer?: Signer) => Promise<T>;
 }

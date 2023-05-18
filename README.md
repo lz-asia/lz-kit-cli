@@ -81,11 +81,6 @@ import { utils } from "ethers";
 import { srcChain, destChain } from "hardhat";
 
 describe("MyLzApp", function () {
-  before(async function () {
-    this.src = srcChain;
-    this.dest = destChain;
-  });
-
   it("should test", async function () {
     // your testing code
   });
@@ -191,13 +186,8 @@ import { utils } from "ethers";
 import { srcChain, destChain } from "hardhat";
 
 describe("MyLzApp", function () {
-  before(async function () {
-    this.src = srcChain;
-    this.dest = destChain;
-  });
-
   it("should test", async function () {
-    const [deployer, alice, bob, carol] = this.src.signers;
+    const [deployer, alice, bob, carol] = await srcChain.getSigners();
   });
 });
 ```
@@ -205,18 +195,20 @@ describe("MyLzApp", function () {
 `Chain` object is defined as below:
 
 ```typescript
-import { HttpNetworkConfig } from "hardhat/types";
-import { BigNumberish, Contract, providers, Signer, Wallet } from "ethers";
+interface SignerWithAddress extends Signer {
+  address: string;
+}
 
 export interface Chain {
   name: string;
   config: HttpNetworkConfig;
   provider: providers.JsonRpcProvider;
-  signers: Array<Wallet>;
+  getSigners: () => Promise<Array<SignerWithAddress>>;
+  getSigner: (address: string) => Promise<SignerWithAddress>;
   getImpersonatedSigner: (
     address: string,
     balance?: BigNumberish
-  ) => Promise<Signer>;
+  ) => Promise<SignerWithAddress>;
   getContract: <T extends Contract>(
     name: string,
     signer?: Signer

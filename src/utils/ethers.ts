@@ -1,5 +1,4 @@
 import { JsonRpcProvider, JsonRpcSigner, toQuantity } from "ethers6";
-import { providers, Wallet } from "ethers";
 
 interface ForkedNetwork {
     chainId: number;
@@ -33,9 +32,4 @@ export const getImpersonatedSigner = async (provider: JsonRpcProvider, account: 
         await provider.send("hardhat_setBalance", [account, toQuantity(balance)]);
     }
     return new JsonRpcSigner(provider, account);
-};
-
-export const deriveWallet = (provider: providers.Provider, mnemonic: string, index?: number) => {
-    const path = "m/44'/60'/0'/0/" + (index ? index : "0");
-    return Wallet.fromMnemonic(mnemonic, path).connect(provider);
 };

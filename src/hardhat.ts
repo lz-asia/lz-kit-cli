@@ -1,12 +1,12 @@
 import fs from "fs";
-import { BigNumber, BigNumberish, Contract, providers, Signer, utils, Wallet } from "ethers";
+import { BigNumber, BigNumberish, Contract, providers, Signer, utils } from "ethers";
 import { extendConfig, extendEnvironment } from "hardhat/config";
-import { HardhatConfig, HardhatRuntimeEnvironment } from "hardhat/types";
-import { HttpNetworkHDAccountsConfig } from "hardhat/src/types/config";
+import { EthereumProvider, HardhatConfig, HardhatRuntimeEnvironment } from "hardhat/types";
 import { Chain } from "./type-extensions";
 import "./type-extensions";
 import { DEFAULT_MNEMONIC } from "./constants";
-import { deriveWallet, getDeployment } from "./utils";
+import { getDeployment } from "./utils";
+import { createProvider } from "hardhat/internal/core/providers/construction";
 
 const dir = "hardhat-configs/";
 if (fs.existsSync(dir)) {
@@ -34,20 +34,17 @@ extendEnvironment(hre => {
 
 const getChain = (hre: HardhatRuntimeEnvironment, name: string) => {
     const config = hre.config.networks[name];
-    if (!config || !("url" in config)) return undefined;
+    const provider = new EthersProviderWrapper(createProvider(name, config));
 
-    const provider = new providers.JsonRpcProvider(config.url, config.chainId);
-    let signers: Wallet[];
-    if (config.accounts == "remote") {
-        throw new Error("remote accounts not supported");
-    } else if (Array.isArray(config.accounts)) {
-        signers = config.accounts.map(key => new Wallet(key, provider));
-    } else {
-        const accounts: HttpNetworkHDAccountsConfig = config.accounts;
-        signers = Array.from(Array(accounts.count || 20).keys()).map(i => {
-            return deriveWallet(provider, accounts.mnemonic, (accounts.initialIndex || 0) + i);
-        });
-    }
+    const getSigners = async () => {
+        const accounts = await provider.listAccounts();
+        return await Promise.all(accounts.map(account => getSigner(account)));
+    };
+
+    const getSigner = async (address: string) => {
+        const signer = provider.getSigner(address);
+        return await SignerWithAddress.create(signer);
+    };
 
     const getImpersonatedSigner = async (address: string, balance?: BigNumberish) => {
         await provider.send("hardhat_impersonateAccount", [address]);
@@ -57,7 +54,7 @@ const getChain = (hre: HardhatRuntimeEnvironment, name: string) => {
                 utils.hexValue(utils.arrayify(BigNumber.from(balance).toHexString())),
             ]);
         }
-        return provider.getSigner(address);
+        return getSigner(address);
     };
 
     const getContract = async <T extends Contract>(contractName: string, signer?: Signer) => {
@@ -87,9 +84,108 @@ const getChain = (hre: HardhatRuntimeEnvironment, name: string) => {
         name,
         config,
         provider,
-        signers,
+        getSigners,
+        getSigner,
         getImpersonatedSigner,
         getContract,
         getContractAt,
     } as Chain;
 };
+
+class EthersProviderWrapper extends providers.JsonRpcProvider {
+    private readonly _hardhatProvider: EthereumProvider;
+
+    constructor(hardhatProvider: EthereumProvider) {
+        super();
+        this._hardhatProvider = hardhatProvider;
+    }
+
+    public async send(method: string, params: any): Promise<any> {
+        return await this._hardhatProvider.send(method, params);
+    }
+
+    public toJSON() {
+        return "<WrappedHardhatProvider>";
+    }
+}
+
+class SignerWithAddress extends Signer {
+    public static async create(signer: providers.JsonRpcSigner) {
+        return new SignerWithAddress(await signer.getAddress(), signer);
+    }
+
+    _initialPromise?: Promise<number>;
+    _deltaCount: number;
+
+    private constructor(public readonly address: string, private readonly _signer: providers.JsonRpcSigner) {
+        super();
+        (this as any).provider = _signer.provider;
+        this._deltaCount = 0;
+    }
+
+    public async getAddress(): Promise<string> {
+        return this.address;
+    }
+
+    public getTransactionCount(blockTag?: providers.BlockTag): Promise<number> {
+        if (blockTag === "pending") {
+            if (!this._initialPromise) {
+                this._initialPromise = this._signer.getTransactionCount("pending");
+            }
+            const deltaCount = this._deltaCount;
+            return this._initialPromise.then(initial => initial + deltaCount);
+        }
+
+        return this._signer.getTransactionCount(blockTag);
+    }
+
+    public setTransactionCount(transactionCount: BigNumberish | Promise<BigNumberish>): void {
+        this._initialPromise = Promise.resolve(transactionCount).then(nonce => {
+            return BigNumber.from(nonce).toNumber();
+        });
+        this._deltaCount = 0;
+    }
+
+    public incrementTransactionCount(count?: number): void {
+        this._deltaCount += count == null ? 1 : count;
+    }
+
+    public signMessage(message: string | utils.Bytes): Promise<string> {
+        return this._signer.signMessage(message);
+    }
+
+    public signTransaction(transaction: utils.Deferrable<providers.TransactionRequest>): Promise<string> {
+        return this._signer.signTransaction(transaction);
+    }
+
+    public sendTransaction(
+        transaction: utils.Deferrable<providers.TransactionRequest>
+    ): Promise<providers.TransactionResponse> {
+        if (transaction.nonce == null) {
+            transaction = utils.shallowCopy(transaction);
+            transaction.nonce = this.getTransactionCount("pending");
+            this.incrementTransactionCount();
+        } else {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            this.setTransactionCount(transaction.nonce);
+            this._deltaCount++;
+        }
+
+        return this._signer.sendTransaction(transaction).then(tx => {
+            return tx;
+        });
+    }
+
+    public connect(provider: providers.Provider): SignerWithAddress {
+        return new SignerWithAddress(this.address, this._signer.connect(provider));
+    }
+
+    public _signTypedData(...params: Parameters<providers.JsonRpcSigner["_signTypedData"]>): Promise<string> {
+        return this._signer._signTypedData(...params);
+    }
+
+    public toJSON() {
+        return `<SignerWithAddress ${this.address}>`;
+    }
+}

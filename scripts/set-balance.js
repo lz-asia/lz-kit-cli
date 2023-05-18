@@ -1,6 +1,5 @@
 const { config } = require("hardhat");
-const { providers, utils } = require("ethers");
-const { deriveWallet } = require("../dist");
+const { providers, utils, Wallet } = require("ethers");
 
 async function main() {
     BigInt.prototype.toJSON = function () {
@@ -18,6 +17,11 @@ async function main() {
         console.log("Set balance of " + address + " to " + process.env.BALANCE);
     }
 }
+
+const deriveWallet = (provider, mnemonic, index) => {
+    const path = "m/44'/60'/0'/0/" + (index ? index : "0");
+    return Wallet.fromMnemonic(mnemonic, path).connect(provider);
+};
 
 main().catch(e => {
     console.error(e);
