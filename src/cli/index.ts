@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import fs from "fs";
+import { normalize } from "path";
 import { program } from "commander";
 import fork from "./fork";
 import relayer from "./relayer";
@@ -8,8 +10,13 @@ import config from "./config";
 import test from "./test";
 import deploy from "./deploy";
 
+const getVersion = () => {
+    const { version } = JSON.parse(fs.readFileSync(normalize(__dirname + "/../../package.json"), "utf8"));
+    return version;
+};
+
 async function main() {
-    program.name("lz-kit").description("Cli tool for LayerZero development").version("0.1.0");
+    program.name("lz-kit").description("Cli tool for LayerZero development").version(getVersion());
     program
         .command("fork")
         .description("Fork a mainnet network")
