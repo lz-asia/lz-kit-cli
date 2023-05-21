@@ -1,4 +1,5 @@
 import fs from "fs";
+import { normalize } from "path";
 import { NetworksConfig } from "hardhat/types";
 import { JsonRpcProvider } from "ethers6";
 import { BASE_FORKED_CHAIN } from "../constants";
@@ -17,11 +18,11 @@ const fork = async (network: string, options: Options) => {
         const provider = new JsonRpcProvider(networkConfig.url);
         const chainId = (await getChainId(provider)) + BASE_FORKED_CHAIN;
         const config = generateConfig(chainId, networkConfig.url);
-        const dir = "hardhat-configs/";
+        const dir = "hardhat-configs";
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir);
         }
-        const configFile = dir + network + "-fork.config.json";
+        const configFile = normalize(dir + "/" + network + "-fork.config.json");
         fs.writeFileSync(configFile, JSON.stringify(config, null, 2), { flag: "w", encoding: "utf-8" });
         const { file, stream } = createWriteStream(".logs/forks", network + "-fork.log");
         executeBackground(`hardhat node --config ${configFile} --port ${options.port || chainId}`, stream);

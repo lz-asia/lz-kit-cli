@@ -1,3 +1,4 @@
+import { normalize } from "path";
 import { Contract, JsonRpcProvider, Provider, parseEther } from "ethers6";
 import { abi as abiEndpoint } from "../constants/artifacts/Endpoint.json";
 import { abi as abiNode } from "../constants/artifacts/UltraLightNodeV2.json";
@@ -35,7 +36,7 @@ const relayer = async (src: string, options: Options) => {
                 return { name, chainId, lzChainId, provider, signer };
             })
         );
-        const { stream } = createWriteStream(".logs/relayers", src + ".log");
+        const { stream, file } = createWriteStream(normalize(".logs/relayers"), src + ".log");
         stream.write(`${src}:\tlistening...\n`);
         await srcNode.on("*", async event => {
             if (event.fragment.name != "Packet") return;
@@ -64,7 +65,7 @@ const relayer = async (src: string, options: Options) => {
                 stream.write(src + ":\t" + e + "\n");
             }
         });
-        console.log(`Relayer is up for ${src}, check logs at .logs/relayers/${src}.log`);
+        console.log(`Relayer is up for ${src}, check logs at ${file}`);
     } catch (e) {
         console.trace(e);
     }

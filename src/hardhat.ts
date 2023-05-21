@@ -1,4 +1,5 @@
 import fs from "fs";
+import { join } from "path";
 import { BigNumber, BigNumberish, Contract, providers, Signer, utils } from "ethers";
 import { extendConfig, extendEnvironment } from "hardhat/config";
 import { EthereumProvider, HardhatConfig, HardhatRuntimeEnvironment } from "hardhat/types";
@@ -8,11 +9,11 @@ import { Chain } from "./type-extensions";
 import "./type-extensions";
 import { getDeployment } from "./utils";
 
-const dir = "hardhat-configs/";
+const dir = "hardhat-configs";
 if (fs.existsSync(dir)) {
     extendConfig((config: HardhatConfig) => {
         for (const file of fs.readdirSync(dir).filter(file => file.endsWith(".config.json"))) {
-            const network = JSON.parse(fs.readFileSync(dir + file, { encoding: "utf-8" })).networks.localhost;
+            const network = JSON.parse(fs.readFileSync(join(dir, file), { encoding: "utf-8" })).networks.localhost;
             config.networks[file.substring(0, file.length - 12)] = {
                 ...network,
                 accounts: process.env.LZ_KIT_MNEMONIC

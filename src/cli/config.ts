@@ -1,4 +1,5 @@
 import fs from "fs";
+import { normalize } from "path";
 import { Contract, getAddress, JsonRpcProvider, Wallet, NonceManager } from "ethers6";
 import { abi as abiLzApp } from "../constants/artifacts/LzApp.json";
 import { DEFAULT_MNEMONIC } from "../constants";
@@ -21,7 +22,7 @@ const config = async (contracts: string[], options: Options) => {
                 const lzApp = new Contract(address, abiLzApp, signer);
                 for (const remoteNetwork of options.networks) {
                     if (remoteNetwork == network) continue;
-                    if (fs.existsSync("deployments/" + remoteNetwork)) {
+                    if (fs.existsSync(normalize("deployments/" + remoteNetwork))) {
                         await configContract(contract, lzApp, remoteNetwork);
                     }
                 }
