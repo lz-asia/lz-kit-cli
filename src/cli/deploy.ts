@@ -9,7 +9,9 @@ interface Options {
 
 const deploy = async (options: Options) => {
     try {
-        await execute("hardhat compile");
+        const compileCode = await execute("hardhat compile");
+        if (compileCode > 0) return;
+
         for (const network of options.networks) {
             console.log("⌛️ Deploying to " + network + "...");
             await execute(`hardhat deploy --reset --no-compile --network ${network}`, {
