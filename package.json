@@ -11,7 +11,8 @@
     "lz-kit": "dist/cli/index.js"
   },
   "exports": {
-    "./*": "./dist/*.js"
+    "./hardhat": "./dist/hardhat.js",
+    ".": "./dist/index.js"
   },
   "files": [
     "dist",

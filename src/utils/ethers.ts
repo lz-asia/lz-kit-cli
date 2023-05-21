@@ -6,10 +6,13 @@ interface ForkedNetwork {
     forkBlockHash: string;
 }
 
-export const getForkedChainId = async (provider: providers.JsonRpcProvider) => {
+export const getForkedChainId = async (provider: providers.JsonRpcProvider, fallback = true) => {
     let chainId = (await getForkedNetwork(provider))?.chainId;
-    if (!chainId) {
+    if (!chainId && fallback) {
         chainId = await getChainId(provider);
+    }
+    if (!chainId) {
+        throw new Error("Cannot get chainId");
     }
     return chainId;
 };
@@ -20,10 +23,7 @@ export const getChainId = async (provider: providers.JsonRpcProvider) => {
 
 export const getForkedNetwork = async (provider: providers.JsonRpcProvider) => {
     const { forkedNetwork } = await provider.send("hardhat_metadata", []);
-    if (!forkedNetwork) {
-        throw new Error("Cannot get forked network");
-    }
-    return forkedNetwork as ForkedNetwork;
+    return forkedNetwork as ForkedNetwork | undefined;
 };
 
 export const getImpersonatedSigner = async (

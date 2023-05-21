@@ -1,16 +1,15 @@
 import { normalize } from "path";
 import { Contract, Event } from "ethers";
-import { abi as abiEndpoint } from "../constants/artifacts/Endpoint.json";
 import { abi as abiNode } from "../constants/artifacts/UltraLightNodeV2.json";
 import { abi as abiLzApp } from "../constants/artifacts/LzApp.json";
-import { endpoint } from "../constants/layerzero.json";
 import {
     getHardhatNetworkConfig,
     getLZChainId,
     getEndpointAddress,
     getImpersonatedSigner,
     createWriteStream,
-    getForkedNetwork,
+    getNodeContract,
+    getForkedChainId,
 } from "../utils";
 import { providers, utils } from "ethers";
 
@@ -24,13 +23,14 @@ const relayer = async (src: string, options: Options) => {
     try {
         const srcConfig = getHardhatNetworkConfig(src);
         const srcProvider = new providers.JsonRpcProvider(srcConfig.url, srcConfig.chainId);
-        const { chainId: srcChainId } = await getForkedNetwork(srcProvider);
-        const srcNode = await getNodeContract(srcProvider, srcChainId, options.node);
+        const srcNode = options.node
+            ? new Contract(options.node, abiNode, srcProvider)
+            : await getNodeContract(srcProvider);
         const destNetworks = await Promise.all(
             options.dest.map(async name => {
                 const config = getHardhatNetworkConfig(name);
                 const provider = new providers.JsonRpcProvider(config.url, config.chainId);
-                const { chainId } = await getForkedNetwork(provider);
+                const chainId = await getForkedChainId(provider);
                 const endpoint = getEndpointAddress(chainId);
                 const lzChainId = await getLZChainId(endpoint, provider);
                 const signer = await getImpersonatedSigner(provider, endpoint, utils.parseEther("10000"));
@@ -74,16 +74,6 @@ const relayer = async (src: string, options: Options) => {
     } catch (e) {
         console.trace(e);
     }
-};
-
-const getNodeContract = async (provider: providers.Provider, chainId: number, node?: string) => {
-    if (node) {
-        return new Contract(node as string, abiNode, provider);
-    }
-    const endpointAddr = (endpoint as Record<string, string>)[chainId.toString()];
-    const contract = new Contract(endpointAddr, abiEndpoint, provider);
-    const address = await contract.defaultSendLibrary();
-    return new Contract(address as string, abiNode, provider);
 };
 
 const parsePacket = (data: string) => {
