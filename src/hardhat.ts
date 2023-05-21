@@ -1,13 +1,13 @@
 import fs from "fs";
 import { join } from "path";
-import { BigNumber, BigNumberish, Contract, providers, Signer, utils } from "ethers";
+import { BigNumberish, Contract, providers, Signer, utils } from "ethers";
 import { extendConfig, extendEnvironment } from "hardhat/config";
 import { EthereumProvider, HardhatConfig, HardhatRuntimeEnvironment } from "hardhat/types";
 import { createProvider } from "hardhat/internal/core/providers/construction";
 import { DEFAULT_MNEMONIC } from "./constants";
 import { Chain } from "./type-extensions";
 import "./type-extensions";
-import { getDeployment } from "./utils";
+import { getDeployment, getImpersonatedSigner as _getImpersonatedSigner } from "./utils";
 
 const dir = "hardhat-configs";
 if (fs.existsSync(dir)) {
@@ -47,14 +47,8 @@ const getChain = (hre: HardhatRuntimeEnvironment, name: string) => {
     };
 
     const getImpersonatedSigner = async (address: string, balance?: BigNumberish) => {
-        await provider.send("hardhat_impersonateAccount", [address]);
-        if (balance) {
-            await provider.send("hardhat_setBalance", [
-                address,
-                utils.hexValue(utils.arrayify(BigNumber.from(balance).toHexString())),
-            ]);
-        }
-        return getSigner(address);
+        const signer = await _getImpersonatedSigner(provider, address, balance);
+        return await SignerWithAddress.create(signer);
     };
 
     const getContract = async <T extends Contract>(contractName: string, signer?: Signer) => {

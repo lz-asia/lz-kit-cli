@@ -62,7 +62,6 @@
     "ansi-colors": "^4.1.3",
     "commander": "^10.0.1",
     "ethers": "^5.7.2",
-    "ethers6": "npm:ethers@^6.3.0",
     "loading-cli": "^1.1.0"
   },
   "engines": {

@@ -1,4 +1,4 @@
-import { JsonRpcProvider, JsonRpcSigner, toQuantity } from "ethers6";
+import { BigNumberish, providers, utils } from "ethers";
 
 interface ForkedNetwork {
     chainId: number;
@@ -6,7 +6,7 @@ interface ForkedNetwork {
     forkBlockHash: string;
 }
 
-export const getForkedChainId = async (provider: JsonRpcProvider) => {
+export const getForkedChainId = async (provider: providers.JsonRpcProvider) => {
     let chainId = (await getForkedNetwork(provider))?.chainId;
     if (!chainId) {
         chainId = await getChainId(provider);
@@ -14,11 +14,11 @@ export const getForkedChainId = async (provider: JsonRpcProvider) => {
     return chainId;
 };
 
-export const getChainId = async (provider: JsonRpcProvider) => {
+export const getChainId = async (provider: providers.JsonRpcProvider) => {
     return parseInt(await provider.send("eth_chainId", []), 16);
 };
 
-export const getForkedNetwork = async (provider: JsonRpcProvider) => {
+export const getForkedNetwork = async (provider: providers.JsonRpcProvider) => {
     const { forkedNetwork } = await provider.send("hardhat_metadata", []);
     if (!forkedNetwork) {
         throw new Error("Cannot get forked network");
@@ -26,10 +26,14 @@ export const getForkedNetwork = async (provider: JsonRpcProvider) => {
     return forkedNetwork as ForkedNetwork;
 };
 
-export const getImpersonatedSigner = async (provider: JsonRpcProvider, account: string, balance?: bigint) => {
+export const getImpersonatedSigner = async (
+    provider: providers.JsonRpcProvider,
+    account: string,
+    balance?: BigNumberish
+) => {
     await provider.send("hardhat_impersonateAccount", [account]);
     if (balance) {
-        await provider.send("hardhat_setBalance", [account, toQuantity(balance)]);
+        await provider.send("hardhat_setBalance", [account, utils.hexValue(balance)]);
     }
-    return new JsonRpcSigner(provider, account);
+    return provider.getSigner(account);
 };

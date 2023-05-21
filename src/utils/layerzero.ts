@@ -1,4 +1,4 @@
-import { Contract, Provider } from "ethers6";
+import { Contract, providers } from "ethers";
 import { abi } from "../constants/artifacts/Endpoint.json";
 import { endpoint } from "../constants/layerzero.json";
 
@@ -10,7 +10,7 @@ export const getEndpointAddress = (chainId: number) => {
     return address;
 };
 
-export const getLZChainId = async (endpointAddress: string, provider: Provider) => {
+export const getLZChainId = async (endpointAddress: string, provider: providers.Provider) => {
     const endpoint = new Contract(endpointAddress, abi, provider);
     let chainId = Number(await endpoint.chainId());
     if (chainId < 100) {

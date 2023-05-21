@@ -1,7 +1,7 @@
 import fs from "fs";
 import { normalize } from "path";
 import { NetworksConfig } from "hardhat/types";
-import { JsonRpcProvider } from "ethers6";
+import { providers } from "ethers";
 import { BASE_FORKED_CHAIN } from "../constants";
 import { getHardhatNetworkConfig, createWriteStream, getChainId } from "../utils";
 import { executeBackground } from "../utils";
@@ -15,7 +15,7 @@ const fork = async (network: string, options: Options) => {
     console.log("⌛️ Forking network " + network + " ...");
     try {
         const networkConfig = getHardhatNetworkConfig(network);
-        const provider = new JsonRpcProvider(networkConfig.url);
+        const provider = new providers.JsonRpcProvider(networkConfig.url);
         const chainId = (await getChainId(provider)) + BASE_FORKED_CHAIN;
         const config = generateConfig(chainId, networkConfig.url);
         const dir = "hardhat-configs";

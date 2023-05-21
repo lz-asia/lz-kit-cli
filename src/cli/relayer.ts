@@ -1,5 +1,5 @@
 import { normalize } from "path";
-import { Contract, JsonRpcProvider, Provider, parseEther } from "ethers6";
+import { Contract, Event } from "ethers";
 import { abi as abiEndpoint } from "../constants/artifacts/Endpoint.json";
 import { abi as abiNode } from "../constants/artifacts/UltraLightNodeV2.json";
 import { abi as abiLzApp } from "../constants/artifacts/LzApp.json";
@@ -12,6 +12,7 @@ import {
     createWriteStream,
     getForkedNetwork,
 } from "../utils";
+import { providers, utils } from "ethers";
 
 interface Options {
     dest: string[];
@@ -22,25 +23,29 @@ const relayer = async (src: string, options: Options) => {
     console.log(`⌛️ Spinning up a relayer for ${src}...`);
     try {
         const srcConfig = getHardhatNetworkConfig(src);
-        const srcProvider = new JsonRpcProvider(srcConfig.url, srcConfig.chainId);
+        const srcProvider = new providers.JsonRpcProvider(srcConfig.url, srcConfig.chainId);
         const { chainId: srcChainId } = await getForkedNetwork(srcProvider);
         const srcNode = await getNodeContract(srcProvider, srcChainId, options.node);
         const destNetworks = await Promise.all(
             options.dest.map(async name => {
                 const config = getHardhatNetworkConfig(name);
-                const provider = new JsonRpcProvider(config.url, config.chainId);
+                const provider = new providers.JsonRpcProvider(config.url, config.chainId);
                 const { chainId } = await getForkedNetwork(provider);
                 const endpoint = getEndpointAddress(chainId);
                 const lzChainId = await getLZChainId(endpoint, provider);
-                const signer = await getImpersonatedSigner(provider, endpoint, parseEther("10000"));
+                const signer = await getImpersonatedSigner(provider, endpoint, utils.parseEther("10000"));
                 return { name, chainId, lzChainId, provider, signer };
             })
         );
         const { stream, file } = createWriteStream(normalize(".logs/relayers"), src + ".log");
         stream.write(`${src}:\tlistening...\n`);
-        await srcNode.on("*", async event => {
-            if (event.fragment.name != "Packet") return;
+        await srcNode.on("*", async (event: Event) => {
+            if (event.event != "Packet") return;
             try {
+                if (!event.args) {
+                    stream.write(`${src}:\tevent doesn't have args\n`);
+                    return;
+                }
                 const { srcChainId, srcUA, destChainId, destUA, nonce, payload } = parsePacket(event.args[0]);
                 stream.write(`${src}:\tPacket(${srcChainId}, ${srcUA}, ${destChainId}, ${destUA}, ${nonce})\n`);
                 const dest = destNetworks.find(({ lzChainId }) => destChainId == lzChainId);
@@ -71,7 +76,7 @@ const relayer = async (src: string, options: Options) => {
     }
 };
 
-const getNodeContract = async (provider: Provider, chainId: number, node?: string) => {
+const getNodeContract = async (provider: providers.Provider, chainId: number, node?: string) => {
     if (node) {
         return new Contract(node as string, abiNode, provider);
     }
