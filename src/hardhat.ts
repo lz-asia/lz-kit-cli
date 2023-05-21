@@ -24,16 +24,12 @@ if (fs.existsSync(dir)) {
 }
 
 extendEnvironment(hre => {
-    if (process.env.SRC_NETWORK) {
-        hre.srcChain = getChain(hre, process.env.SRC_NETWORK);
-    }
-    if (process.env.DEST_NETWORK) {
-        hre.destChain = getChain(hre, process.env.DEST_NETWORK);
-    }
+    hre.getChain = (name: string) => getChain(hre, name);
 });
 
 const getChain = (hre: HardhatRuntimeEnvironment, name: string) => {
     const config = hre.config.networks[name];
+    if (!config) throw new Error("Cannot find network " + name);
     const provider = new EthersProviderWrapper(createProvider(name, config));
 
     const getSigners = async () => {

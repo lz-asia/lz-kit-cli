@@ -51,8 +51,7 @@ async function main() {
     program
         .command("test")
         .description("Test LzApp contracts")
-        .requiredOption("-s, --src <network>", "source network")
-        .requiredOption("-d, --dest <network>", "destination network")
+        .option("-n, --networks <network...>", "networks to config")
         .option("--mnemonic <string>", "mnemonic for accounts")
         .option("--deploy", "if set, deploy and configure contracts")
         .option("--config <name...>", "LZApp name(s) for config")
