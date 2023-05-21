@@ -11,13 +11,12 @@ interface Options {
 
 const test = async (options: Options) => {
     try {
+        const mnemonic = options.mnemonic || DEFAULT_MNEMONIC;
         if (options.deploy) {
             if (!options.networks) {
                 console.error("Missing networks");
                 return;
             }
-
-            const mnemonic = options.mnemonic || DEFAULT_MNEMONIC;
             await deploy({
                 networks: options.networks,
                 mnemonic,
@@ -25,7 +24,9 @@ const test = async (options: Options) => {
             });
         }
 
-        await execute("hardhat test --no-compile");
+        await execute("hardhat test --no-compile", {
+            LZ_KIT_MNEMONIC: mnemonic,
+        });
     } catch (e) {
         console.trace(e);
     }

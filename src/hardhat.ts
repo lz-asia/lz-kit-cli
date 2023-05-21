@@ -2,11 +2,11 @@ import fs from "fs";
 import { BigNumber, BigNumberish, Contract, providers, Signer, utils } from "ethers";
 import { extendConfig, extendEnvironment } from "hardhat/config";
 import { EthereumProvider, HardhatConfig, HardhatRuntimeEnvironment } from "hardhat/types";
+import { createProvider } from "hardhat/internal/core/providers/construction";
+import { DEFAULT_MNEMONIC } from "./constants";
 import { Chain } from "./type-extensions";
 import "./type-extensions";
-import { DEFAULT_MNEMONIC } from "./constants";
 import { getDeployment } from "./utils";
-import { createProvider } from "hardhat/internal/core/providers/construction";
 
 const dir = "hardhat-configs/";
 if (fs.existsSync(dir)) {
@@ -15,9 +15,11 @@ if (fs.existsSync(dir)) {
             const network = JSON.parse(fs.readFileSync(dir + file, { encoding: "utf-8" })).networks.localhost;
             config.networks[file.substring(0, file.length - 12)] = {
                 ...network,
-                accounts: {
-                    mnemonic: process.env.MNEMONIC || DEFAULT_MNEMONIC,
-                },
+                accounts: process.env.LZ_KIT_MNEMONIC
+                    ? {
+                          mnemonic: process.env.LZ_KIT_MNEMONIC || DEFAULT_MNEMONIC,
+                      }
+                    : network.accounts,
             };
         }
     });
@@ -30,7 +32,8 @@ extendEnvironment(hre => {
 const getChain = (hre: HardhatRuntimeEnvironment, name: string) => {
     const config = hre.config.networks[name];
     if (!config) throw new Error("Cannot find network " + name);
-    const provider = new EthersProviderWrapper(createProvider(name, config));
+    if (!("url" in config)) throw new Error("Missing 'url' for network " + name);
+    const provider = new EthereumProviderWrapper(createProvider(name, config), config.url, config.chainId);
 
     const getSigners = async () => {
         const accounts = await provider.listAccounts();
@@ -88,20 +91,33 @@ const getChain = (hre: HardhatRuntimeEnvironment, name: string) => {
     } as Chain;
 };
 
-class EthersProviderWrapper extends providers.JsonRpcProvider {
-    private readonly _hardhatProvider: EthereumProvider;
+class EthereumProviderWrapper extends providers.JsonRpcProvider {
+    private readonly _provider: EthereumProvider;
 
-    constructor(hardhatProvider: EthereumProvider) {
-        super();
-        this._hardhatProvider = hardhatProvider;
+    constructor(provider: EthereumProvider, url: string, chainId?: number) {
+        super(url, chainId);
+        this._provider = provider;
     }
 
-    public async send(method: string, params: any): Promise<any> {
-        return await this._hardhatProvider.send(method, params);
+    public async send(method: string, params: Array<unknown>): Promise<unknown> {
+        try {
+            return await this._provider.send(method, params);
+        } catch (e) {
+            // fallback for impersonated accounts (without local private keys)
+            if (
+                method == "eth_sign" ||
+                method == "personal_sign" ||
+                method == "eth_signTypedData_v4" ||
+                method == "eth_sendTransaction"
+            ) {
+                return await super.send(method, params);
+            }
+            throw e;
+        }
     }
 
     public toJSON() {
-        return "<WrappedHardhatProvider>";
+        return "<EthereumProviderWrapper>";
     }
 }
 
@@ -110,40 +126,13 @@ class SignerWithAddress extends Signer {
         return new SignerWithAddress(await signer.getAddress(), signer);
     }
 
-    _initialPromise?: Promise<number>;
-    _deltaCount: number;
-
     private constructor(public readonly address: string, private readonly _signer: providers.JsonRpcSigner) {
         super();
         (this as any).provider = _signer.provider;
-        this._deltaCount = 0;
     }
 
     public async getAddress(): Promise<string> {
         return this.address;
-    }
-
-    public getTransactionCount(blockTag?: providers.BlockTag): Promise<number> {
-        if (blockTag === "pending") {
-            if (!this._initialPromise) {
-                this._initialPromise = this._signer.getTransactionCount("pending");
-            }
-            const deltaCount = this._deltaCount;
-            return this._initialPromise.then(initial => initial + deltaCount);
-        }
-
-        return this._signer.getTransactionCount(blockTag);
-    }
-
-    public setTransactionCount(transactionCount: BigNumberish | Promise<BigNumberish>): void {
-        this._initialPromise = Promise.resolve(transactionCount).then(nonce => {
-            return BigNumber.from(nonce).toNumber();
-        });
-        this._deltaCount = 0;
-    }
-
-    public incrementTransactionCount(count?: number): void {
-        this._deltaCount += count == null ? 1 : count;
     }
 
     public signMessage(message: string | utils.Bytes): Promise<string> {
@@ -157,20 +146,7 @@ class SignerWithAddress extends Signer {
     public sendTransaction(
         transaction: utils.Deferrable<providers.TransactionRequest>
     ): Promise<providers.TransactionResponse> {
-        if (transaction.nonce == null) {
-            transaction = utils.shallowCopy(transaction);
-            transaction.nonce = this.getTransactionCount("pending");
-            this.incrementTransactionCount();
-        } else {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            this.setTransactionCount(transaction.nonce);
-            this._deltaCount++;
-        }
-
-        return this._signer.sendTransaction(transaction).then(tx => {
-            return tx;
-        });
+        return this._signer.sendTransaction(transaction);
     }
 
     public connect(provider: providers.Provider): SignerWithAddress {
