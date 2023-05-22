@@ -22,7 +22,8 @@ async function main() {
         .description("Fork a mainnet network")
         .argument("<network>", "network to fork (e.g. ethereum)")
         .requiredOption("-k, --key <string>", "infura api key")
-        .option("-p, --port <number>", "port of json rpc")
+        .option("--chain-id <number>", "chain ID of forked network")
+        .option("--port <number>", "port of json rpc")
         .action(fork);
     program
         .command("relayer")
