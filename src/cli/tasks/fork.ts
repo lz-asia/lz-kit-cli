@@ -2,9 +2,9 @@ import fs from "fs";
 import { normalize } from "path";
 import { NetworksConfig } from "hardhat/types";
 import { providers } from "ethers";
-import { BASE_FORKED_CHAIN } from "../constants";
-import { getHardhatNetworkConfig, createWriteStream, getChainId } from "../utils";
-import { executeBackground } from "../utils";
+import { BASE_FORKED_CHAIN } from "../../constants";
+import { getHardhatNetworkConfig, createWriteStream, getChainId } from "../../utils";
+import { executeBackground } from "../../utils";
 
 interface Options {
     key: string;

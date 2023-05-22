@@ -1,8 +1,14 @@
 import fs from "fs";
 import { normalize } from "path";
-import { abi as abiLzApp } from "../constants/artifacts/LzApp.json";
-import { DEFAULT_MNEMONIC } from "../constants";
-import { getDeployment, getEndpointAddress, getForkedChainId, getHardhatNetworkConfig, getLZChainId } from "../utils";
+import { abi as abiLzApp } from "../../constants/artifacts/LzApp.json";
+import { DEFAULT_MNEMONIC } from "../../constants";
+import {
+    getDeployment,
+    getEndpointAddress,
+    getForkedChainId,
+    getHardhatNetworkConfig,
+    getLZChainId,
+} from "../../utils";
 import { Contract, providers, utils, Wallet } from "ethers";
 
 interface Options {

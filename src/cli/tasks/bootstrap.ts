@@ -1,8 +1,8 @@
 import { normalize } from "path";
 import fork from "./fork";
 import relayer from "./relayer";
-import { execute } from "../utils";
-import { DEFAULT_MNEMONIC } from "../constants";
+import { execute } from "../../utils";
+import { DEFAULT_MNEMONIC } from "../../constants";
 
 interface Options {
     key: string;

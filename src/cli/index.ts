@@ -3,12 +3,12 @@
 import fs from "fs";
 import { normalize } from "path";
 import { program } from "commander";
-import fork from "./fork";
-import relayer from "./relayer";
-import bootstrap from "./bootstrap";
-import config from "./config";
-import test from "./test";
-import deploy from "./deploy";
+import fork from "./tasks/fork";
+import relayer from "./tasks/relayer";
+import bootstrap from "./tasks/bootstrap";
+import config from "./tasks/config";
+import test from "./tasks/test";
+import deploy from "./tasks/deploy";
 
 const getVersion = () => {
     const { version } = JSON.parse(fs.readFileSync(normalize(__dirname + "/../../package.json"), "utf8"));

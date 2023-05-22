@@ -1,4 +1,4 @@
-import { execute } from "../utils";
+import { execute } from "../../utils";
 import config from "./config";
 
 interface Options {

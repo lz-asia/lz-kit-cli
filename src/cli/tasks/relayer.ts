@@ -1,7 +1,7 @@
 import { normalize } from "path";
 import { Contract, Event } from "ethers";
-import { abi as abiNode } from "../constants/artifacts/UltraLightNodeV2.json";
-import { abi as abiLzApp } from "../constants/artifacts/LzApp.json";
+import { abi as abiNode } from "../../constants/artifacts/UltraLightNodeV2.json";
+import { abi as abiLzApp } from "../../constants/artifacts/LzApp.json";
 import {
     getHardhatNetworkConfig,
     getLZChainId,
@@ -10,7 +10,7 @@ import {
     createWriteStream,
     getNodeContract,
     getForkedChainId,
-} from "../utils";
+} from "../../utils";
 import { providers, utils } from "ethers";
 
 interface Options {
