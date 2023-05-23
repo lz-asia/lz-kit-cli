@@ -6,10 +6,17 @@ export interface SignerWithAddress extends Signer {
     address: string;
 }
 
+export interface Snapshot {
+    restore: () => Promise<void>;
+    id: string;
+}
+
 export interface Chain {
     name: string;
     config: HttpNetworkConfig;
     provider: providers.JsonRpcProvider;
+    snapshot: Snapshot;
+    takeSnapshot: () => Promise<Snapshot>;
     getSigners: () => Promise<Array<SignerWithAddress>>;
     getSigner: (address: string) => Promise<SignerWithAddress>;
     getImpersonatedSigner: (address: string, balance?: BigNumberish) => Promise<SignerWithAddress>;
@@ -21,6 +28,6 @@ declare module "hardhat/types/runtime" {
     // This is an example of an extension to the Hardhat Runtime Environment.
     // This new field will be available in tasks' actions, scripts, and tests.
     export interface HardhatRuntimeEnvironment {
-        getChain: (name: string) => Chain | undefined;
+        getChain: (name: string) => Promise<Chain | undefined>;
     }
 }

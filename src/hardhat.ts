@@ -27,14 +27,28 @@ if (fs.existsSync(dir)) {
 }
 
 extendEnvironment(hre => {
-    hre.getChain = (name: string) => getChain(hre, name);
+    hre.getChain = async (name: string) => await getChain(hre, name);
 });
 
-const getChain = (hre: HardhatRuntimeEnvironment, name: string) => {
+const getChain = async (hre: HardhatRuntimeEnvironment, name: string) => {
     const config = hre.config.networks[name];
     if (!config) throw new Error("Cannot find network " + name);
     if (!("url" in config)) throw new Error("Missing 'url' for network " + name);
     const provider = new EthereumProviderWrapper(createProvider(name, config), config.url, config.chainId);
+
+    const takeSnapshot = async () => {
+        const id = (await provider.send("evm_snapshot", [])) as string;
+        return {
+            id,
+            restore: async () => {
+                const reverted = (await provider.send("evm_revert", [id])) as boolean;
+                if (!reverted) {
+                    throw new Error("Invalid snapshot id");
+                }
+            },
+        };
+    };
+    const snapshot = await takeSnapshot();
 
     const getSigners = async () => {
         const accounts = await provider.listAccounts();
@@ -78,6 +92,8 @@ const getChain = (hre: HardhatRuntimeEnvironment, name: string) => {
         name,
         config,
         provider,
+        snapshot,
+        takeSnapshot,
         getSigners,
         getSigner,
         getImpersonatedSigner,
