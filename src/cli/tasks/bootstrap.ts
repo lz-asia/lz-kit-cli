@@ -33,12 +33,16 @@ const bootstrap = async (networks: string[], options: Options) => {
     if (options.balance) {
         for (const network of networks) {
             console.log("⌛️ Setting balance for " + network + "-fork...");
-            await execute(`hardhat run --no-compile ${normalize(__dirname + "/../../../scripts/set-balance.js")}`, {
-                NETWORK: network + "-fork",
-                MNEMONIC: options.mnemonic || DEFAULT_MNEMONIC,
-                BALANCE: options.balance,
-                ACCOUNTS: String(options.accounts || 1),
-            });
+            const code = await execute(
+                `hardhat run --no-compile ${normalize(__dirname + "/../../../scripts/set-balance.js")}`,
+                {
+                    NETWORK: network + "-fork",
+                    MNEMONIC: options.mnemonic || DEFAULT_MNEMONIC,
+                    BALANCE: options.balance,
+                    ACCOUNTS: String(options.accounts || 1),
+                }
+            );
+            if (code > 0) return;
         }
     }
 

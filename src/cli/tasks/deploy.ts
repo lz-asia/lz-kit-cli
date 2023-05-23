@@ -14,9 +14,10 @@ const deploy = async (options: Options) => {
 
         for (const network of options.networks) {
             console.log("⌛️ Deploying to " + network + "...");
-            await execute(`hardhat deploy --reset --no-compile --network ${network}`, {
+            const code = await execute(`hardhat deploy --reset --no-compile --network ${network}`, {
                 LZ_KIT_MNEMONIC: options.mnemonic || "",
             });
+            if (code > 0) return;
         }
         console.log("🔥 Deployed all contracts");
 
