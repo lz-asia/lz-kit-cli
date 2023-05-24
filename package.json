@@ -1,10 +1,10 @@
 {
-  "name": "@lz-asia/lz-kit",
+  "name": "@lz-kit/cli",
   "version": "0.5.1",
   "description": "LayerZero Kit",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/lz-asia/lz-kit.git",
+  "repository": "https://github.com/lz-kit/cli.git",
   "author": "LevX <team@levx.io>",
   "license": "MIT",
   "bin": {

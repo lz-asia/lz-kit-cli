@@ -19,19 +19,19 @@ You also need `hardhat-deploy` plugin to run `lz-kit test`. Follow this [link](h
 ### Install
 
 ```shell
-npm install -g @lz-asia/lz-kit
+npm install -g @lz-kit/cli
 ```
 
-You need to import `@lz-asia/lz-kit/hardhat` in your `hardhat.config.js` or `hardhat.config.ts`:
+You need to import `@lz-kit/cli/hardhat` in your `hardhat.config.js` or `hardhat.config.ts`:
 
 ```shell
-import "@lz-asia/lz-kit/hardhat";
+import "@lz-kit/cli/hardhat";
 ```
 
 or
 
 ```shell
-require("@lz-asia/lz-kit/hardhat");
+require("@lz-kit/cli/hardhat");
 ```
 
 ### Usage
@@ -166,7 +166,7 @@ Option `--mnemonic` specifies which account to be used when calling `setTrustedR
 
 It deploys and configures contracts if needed and run `hardhat test` with additional HRE objects `srcChain` and `destChain`.
 
-It has dependency on `hardhat-deploy` plugin. Also you need to import `@lz-asia/lz-kit/hardhat-plugin` in your `hardhat.config.js` or `hardhat.config.js`.
+It has dependency on `hardhat-deploy` plugin. Also you need to import `@lz-kit/cli/hardhat` in your `hardhat.config.js` or `hardhat.config.js`.
 
 An example to test cross chain contract on all combinations of forked networks:
 

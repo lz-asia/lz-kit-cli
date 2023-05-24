@@ -50,7 +50,7 @@ const bootstrap = async (networks: string[], options: Options) => {
     console.log("===============================================================================");
     console.log("🎉 Bootstrap completed but DO NOT TERMINATE this process");
     console.log("🌈 Check RPC URLs in hardhat-configs/*.config.json for respective networks");
-    console.log("🍀 Leave issues on https://github.com/lz-asia/lz-kit/issues if any!");
+    console.log("🍀 Leave issues on https://github.com/lz-kit/cli/issues if any!");
     console.log("===============================================================================");
 };
 
