@@ -21,9 +21,18 @@ export const getChainId = async (provider: providers.JsonRpcProvider) => {
     return parseInt(await provider.send("eth_chainId", []), 16);
 };
 
+const cachedForkedNetworks: { [chainId: number]: ForkedNetwork } = {};
+
 export const getForkedNetwork = async (provider: providers.JsonRpcProvider) => {
+    const cache = cachedForkedNetworks[provider.network.chainId];
+    if (cache) {
+        return cache;
+    }
     const { forkedNetwork } = await provider.send("hardhat_metadata", []);
-    return forkedNetwork as ForkedNetwork | undefined;
+    if (forkedNetwork) {
+        cachedForkedNetworks[provider.network.chainId] = forkedNetwork as ForkedNetwork;
+        return forkedNetwork as ForkedNetwork;
+    }
 };
 
 export const getImpersonatedSigner = async (

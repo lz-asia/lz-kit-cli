@@ -4,7 +4,11 @@ import { HttpNetworkConfig, NetworksConfig } from "hardhat/types";
 import fs from "fs";
 import { Deployment } from "hardhat-deploy/dist/types";
 
+const cachedHardhatNetworkConfig: { [name: string]: HttpNetworkConfig } = {};
+
 export const getHardhatNetworkConfig = (name: string) => {
+    const cache = cachedHardhatNetworkConfig[name];
+    if (cache) return cache;
     const data = execSync(`hardhat run ${normalize(__dirname + "/../../scripts/hardhat-networks.js")}`).toString();
     const start = data.indexOf("{");
     const end = data.lastIndexOf("}");
@@ -19,6 +23,7 @@ export const getHardhatNetworkConfig = (name: string) => {
     if (!("url" in config)) {
         throw new Error(`Cannot get url from network ${name}`);
     }
+    cachedHardhatNetworkConfig[name] = config;
     return config as HttpNetworkConfig;
 };
 
