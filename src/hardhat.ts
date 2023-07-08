@@ -12,9 +12,12 @@ import { getDeployment, getImpersonatedSigner as _getImpersonatedSigner } from "
 const dir = "hardhat-configs";
 if (fs.existsSync(dir)) {
     extendConfig((config: HardhatConfig) => {
-        for (const file of fs.readdirSync(dir).filter(file => file.endsWith(".config.json"))) {
-            const network = JSON.parse(fs.readFileSync(join(dir, file), { encoding: "utf-8" })).networks.localhost;
-            config.networks[file.substring(0, file.length - 12)] = {
+        for (const file of fs.readdirSync(dir).filter(file => file.endsWith(".config.js"))) {
+            const data = fs.readFileSync(join(dir, file), { encoding: "utf-8" });
+            const start = data.indexOf("{");
+            const end = data.lastIndexOf("}");
+            const network = JSON.parse(data.substring(start, end + 1)).networks.localhost;
+            config.networks[file.substring(0, file.length - 10)] = {
                 ...network,
                 accounts: process.env.LZ_KIT_MNEMONIC
                     ? {
