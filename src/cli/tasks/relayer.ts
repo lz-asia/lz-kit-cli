@@ -1,5 +1,5 @@
 import { normalize } from "path";
-import { Contract, Event } from "ethers";
+import { Contract } from "ethers";
 import { abi as abiNode } from "../../constants/artifacts/UltraLightNodeV2.json";
 import { abi as abiLzApp } from "../../constants/artifacts/LzApp.json";
 import {
@@ -13,7 +13,6 @@ import {
 } from "../../utils";
 import { providers, utils } from "ethers";
 import { WriteStream } from "fs";
-import { clearImmediate } from "timers";
 
 interface Options {
     dest: string[];
@@ -28,12 +27,9 @@ interface DestNetwork {
     signer: providers.JsonRpcSigner;
 }
 
-const LOOP_INTERVAL = 1000;
-
 const log = (stream: WriteStream, category: string, ...msg: unknown[]) => {
     stream.write(new Date().toISOString() + "\t" + category + "\t" + msg.join("\t") + "\n");
 };
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 const relayer = async (src: string, options: Options) => {
     console.log(`⌛️ Spinning up a relayer for ${src}...`);
