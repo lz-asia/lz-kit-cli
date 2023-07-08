@@ -12,17 +12,34 @@ import {
     getForkedChainId,
 } from "../../utils";
 import { providers, utils } from "ethers";
+import { WriteStream } from "fs";
+import { clearImmediate } from "timers";
 
 interface Options {
     dest: string[];
     node?: string;
 }
 
+interface DestNetwork {
+    name: string;
+    chainId: number;
+    lzChainId: number;
+    provider: providers.JsonRpcProvider;
+    signer: providers.JsonRpcSigner;
+}
+
+const LOOP_INTERVAL = 1000;
+
+const log = (stream: WriteStream, category: string, ...msg: unknown[]) => {
+    stream.write(new Date().toISOString() + "\t" + category + "\t" + msg.join("\t") + "\n");
+};
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
 const relayer = async (src: string, options: Options) => {
     console.log(`⌛️ Spinning up a relayer for ${src}...`);
     try {
         const srcConfig = getHardhatNetworkConfig(src);
-        const srcProvider = new providers.JsonRpcProvider(srcConfig.url, srcConfig.chainId);
+        const srcProvider = new providers.WebSocketProvider(srcConfig.url, srcConfig.chainId);
         const srcNode = options.node
             ? new Contract(options.node, abiNode, srcProvider)
             : await getNodeContract(srcProvider);
@@ -34,45 +51,55 @@ const relayer = async (src: string, options: Options) => {
                 const endpoint = getEndpointAddress(chainId);
                 const lzChainId = await getLZChainId(endpoint, provider);
                 const signer = await getImpersonatedSigner(provider, endpoint, utils.parseEther("10000"));
-                return { name, chainId, lzChainId, provider, signer };
+                return { name, chainId, lzChainId, provider, signer } as DestNetwork;
             })
         );
         const { stream, file } = createWriteStream(normalize(".logs/relayers"), src + ".log");
-        stream.write(`${src}:\tlistening...\n`);
-        await srcNode.on("*", async (event: Event) => {
-            if (event.event != "Packet") return;
-            try {
-                if (!event.args) {
-                    stream.write(`${src}:\tevent doesn't have args\n`);
-                    return;
-                }
-                const { srcChainId, srcUA, destChainId, destUA, nonce, payload } = parsePacket(event.args[0]);
-                stream.write(`${src}:\tPacket(${srcChainId}, ${srcUA}, ${destChainId}, ${destUA}, ${nonce})\n`);
-                const dest = destNetworks.find(({ lzChainId }) => destChainId == lzChainId);
-                if (!dest) {
-                    stream.write(`${src}:\tunknown destination chain ${destChainId}\n`);
-                    return;
-                }
-                const lzApp = new Contract(destUA, abiLzApp, dest.signer);
-                const tx = await lzApp.lzReceive(srcChainId, srcUA + destUA.substring(2), nonce, payload);
-                stream.write(
-                    `${dest.name}:\tlzReceive(${srcChainId}, ${srcUA + destUA.substring(2)}, ${nonce}, ${payload})}\n`
-                );
-                stream.write(dest.name + ":\ttxHash: " + tx.hash + "\n");
-            } catch (e) {
-                if (e instanceof Error) {
-                    const stack = (e as Error).stack;
-                    if (stack) {
-                        stream.write(src + ":\t" + stack + "\n");
-                        return;
-                    }
-                }
-                stream.write(src + ":\t" + e + "\n");
+        log(stream, src, "listening...");
+        console.log(`Relayer is up for ${src}, check logs at ${file}`);
+
+        let lastBlock = await srcProvider.getBlockNumber();
+        const listener = async (data: string) => await handleEvent(src, destNetworks, stream, data);
+        srcProvider.on("block", async (block: number) => {
+            if (block < lastBlock) {
+                log(stream, src, `evm_revert detected: ${lastBlock} -> ${block}`);
+                lastBlock = block;
+                srcNode.off("Packet", listener);
+                srcNode.on("Packet", listener);
             }
         });
-        console.log(`Relayer is up for ${src}, check logs at ${file}`);
+        srcNode.on("Packet", listener);
     } catch (e) {
         console.trace(e);
+    }
+};
+
+const handleEvent = async (src: string, destNetworks: DestNetwork[], stream: WriteStream, packet: string) => {
+    try {
+        const { srcChainId, srcUA, destChainId, destUA, nonce, payload } = parsePacket(packet);
+        log(stream, src, `event Packet(${srcChainId}, ${srcUA}, ${destChainId}, ${destUA}, ${nonce})`);
+        const dest = destNetworks.find(({ lzChainId }) => destChainId == lzChainId);
+        if (!dest) {
+            log(stream, src, `error: unknown destination chain ${destChainId}`);
+            return;
+        }
+        const lzApp = new Contract(destUA, abiLzApp, dest.signer);
+        const tx = await lzApp.lzReceive(srcChainId, srcUA + destUA.substring(2), nonce, payload);
+        log(
+            stream,
+            dest.name,
+            `execute ${lzApp.address}.lzReceive(${srcChainId}, ${srcUA + destUA.substring(2)}, ${nonce}, ${payload})}`
+        );
+        log(stream, dest.name, "tx: " + tx.hash);
+    } catch (e) {
+        if (e instanceof Error) {
+            const stack = (e as Error).stack;
+            if (stack) {
+                log(stream, src + ":\t" + stack + "\n");
+                return;
+            }
+        }
+        log(stream, src, e);
     }
 };
 
