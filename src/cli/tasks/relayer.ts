@@ -1,5 +1,5 @@
 import { normalize } from "path";
-import { Contract } from "ethers";
+import { Contract, Event } from "ethers";
 import { abi as abiNode } from "../../constants/artifacts/UltraLightNodeV2.json";
 import { abi as abiLzApp } from "../../constants/artifacts/LzApp.json";
 import {
@@ -55,7 +55,17 @@ const relayer = async (src: string, options: Options) => {
         console.log(`Relayer is up for ${src}, check logs at ${file}`);
 
         let lastBlock = await srcProvider.getBlockNumber();
-        const listener = async (data: string) => await handleEvent(src, destNetworks, stream, data);
+        const listener = async (...args: unknown[]) => {
+            const event = args[args.length - 1] as Event;
+            await handleEvent(
+                src,
+                destNetworks,
+                stream,
+                args[0] as string,
+                srcNode,
+                await event.getTransactionReceipt()
+            );
+        };
         srcProvider.on("block", async (block: number) => {
             if (block < lastBlock) {
                 log(stream, src, `evm_revert detected: ${lastBlock} -> ${block}`);
@@ -70,7 +80,14 @@ const relayer = async (src: string, options: Options) => {
     }
 };
 
-const handleEvent = async (src: string, destNetworks: DestNetwork[], stream: WriteStream, packet: string) => {
+const handleEvent = async (
+    src: string,
+    destNetworks: DestNetwork[],
+    stream: WriteStream,
+    packet: string,
+    srcNode: Contract,
+    txReceipt: providers.TransactionReceipt
+) => {
     try {
         const { srcChainId, srcUA, destChainId, destUA, nonce, payload } = parsePacket(packet);
         log(stream, src, `event Packet(${srcChainId}, ${srcUA}, ${destChainId}, ${destUA}, ${nonce})`);
@@ -79,14 +96,30 @@ const handleEvent = async (src: string, destNetworks: DestNetwork[], stream: Wri
             log(stream, src, `error: unknown destination chain ${destChainId}`);
             return;
         }
+        const relayerParamsEvent = (
+            await srcNode.queryFilter("RelayerParams", txReceipt.blockNumber, txReceipt.blockNumber)
+        ).find(event => event.transactionHash == txReceipt.transactionHash);
+        if (!relayerParamsEvent || !relayerParamsEvent.args) {
+            log(stream, src, "error: cannot find event RelayerParams");
+            return;
+        }
+        const { gasLimit, nativeAmount, nativeAddress } = parseAdapterParams(relayerParamsEvent.args[0]);
+        log(stream, src, `event RelayerParams(${gasLimit},${nativeAmount},${nativeAddress})`);
+        if (nativeAmount && nativeAmount > 0 && nativeAddress) {
+            const tx = await dest.signer.sendTransaction({ to: nativeAddress, value: nativeAmount });
+            log(stream, src, `sent ${utils.formatEther(nativeAmount)} to ${nativeAddress}`);
+            log(stream, dest.name, tx.hash);
+        }
         const lzApp = new Contract(destUA, abiLzApp, dest.signer);
-        const tx = await lzApp.lzReceive(srcChainId, srcUA + destUA.substring(2), nonce, payload);
+        const tx = await lzApp.lzReceive(srcChainId, srcUA + destUA.substring(2), nonce, payload, {
+            gasLimit,
+        });
         log(
             stream,
             dest.name,
             `execute ${lzApp.address}.lzReceive(${srcChainId}, ${srcUA + destUA.substring(2)}, ${nonce}, ${payload})}`
         );
-        log(stream, dest.name, "tx: " + tx.hash);
+        log(stream, dest.name, tx.hash);
     } catch (e) {
         if (e instanceof Error) {
             const stack = (e as Error).stack;
@@ -95,7 +128,7 @@ const handleEvent = async (src: string, destNetworks: DestNetwork[], stream: Wri
                 return;
             }
         }
-        log(stream, src, e);
+        log(stream, src, "error: " + e);
     }
 };
 
@@ -108,6 +141,19 @@ const parsePacket = (data: string) => {
     const destUA = parser.nextHexString(20);
     const payload = parser.nextHexString();
     return { nonce, srcChainId, srcUA, destChainId, destUA, payload };
+};
+
+const parseAdapterParams = (adapterParams: string) => {
+    const parser = new HexParser(adapterParams);
+    const type = parser.nextInt(2);
+    const params: { gasLimit: number; nativeAmount?: number; nativeAddress?: string } = {
+        gasLimit: parser.nextInt(32),
+    };
+    if (type == 2) {
+        params.nativeAmount = parser.nextInt(32);
+        params.nativeAddress = parser.nextHexString(20);
+    }
+    return params;
 };
 
 class HexParser {

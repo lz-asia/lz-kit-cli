@@ -9,7 +9,9 @@ const cachedHardhatNetworkConfig: { [name: string]: HttpNetworkConfig } = {};
 export const getHardhatNetworkConfig = (name: string) => {
     const cache = cachedHardhatNetworkConfig[name];
     if (cache) return cache;
-    const data = execSync(`hardhat run ${normalize(__dirname + "/../../scripts/hardhat-networks.js")}`).toString();
+    const data = execSync(
+        `hardhat run --no-compile ${normalize(__dirname + "/../../scripts/hardhat-networks.js")}`
+    ).toString();
     const start = data.indexOf("{");
     const end = data.lastIndexOf("}");
     const networks = JSON.parse(data.substring(start, end + 1)) as NetworksConfig;
