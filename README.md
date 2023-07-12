@@ -104,14 +104,13 @@ describe("MyLzApp", function () {
 Set environment variables for reuse:
 
 ```shell
-INFURA_API_KEY=<your infura api key>
 MNEMONIC=<your seed phrase>
 ```
 
 Bootstrap ethereum, optimism and arbitrum in the background (fork networks and spin up relayers between them):
 
 ```shell
-lz-kit bootstrap -k "$INFURA_API_KEY" --mnemonic "$MNEMONIC" --balance 10000 --accounts 3 ethereum optimism arbitrum &
+lz-kit bootstrap --mnemonic "$MNEMONIC" --balance 10000 --accounts 3 ethereum optimism arbitrum &
 ```
 
 Deploy contracts, configure trusted remotes and run tests:
@@ -138,9 +137,9 @@ override it.
 An example to fork ethereum and arbitrum:
 
 ```shell
-lz-kit fork ethereum -k "$INFURA_API_KEY" &&
-lz-kit fork optimism -k "$INFURA_API_KEY" &&
-lz-kit fork arbitrum -k "$INFURA_API_KEY"
+lz-kit fork ethereum &&
+lz-kit fork optimism &&
+lz-kit fork arbitrum
 ```
 
 After forking, you'll see new config files under `hardhat-configs/`. We recommend you to add below to your `.gitignore`:
@@ -176,7 +175,7 @@ needed.
 An example to bootstrap all networks, set balance of three accounts of each network to 10000 ETH:
 
 ```shell
-lz-kit bootstrap -k "$INFURA_API_KEY" --mnemonic "$MNEMONIC" --balance 10000 --accounts 3 ethereum optimism arbitrum
+lz-kit bootstrap --mnemonic "$MNEMONIC" --balance 10000 --accounts 3 ethereum optimism arbitrum
 ```
 
 Network names need to be placed at the end of the command because it accepts variable number of networks.

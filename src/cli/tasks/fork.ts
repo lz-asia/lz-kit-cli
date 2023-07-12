@@ -7,7 +7,6 @@ import { getHardhatNetworkConfig, createWriteStream, getChainId } from "../../ut
 import { executeBackground } from "../../utils";
 
 interface Options {
-    key: string;
     chainId?: number;
     port?: number;
 }

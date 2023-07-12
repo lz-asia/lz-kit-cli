@@ -5,7 +5,6 @@ import { execute } from "../../utils";
 import { DEFAULT_MNEMONIC } from "../../constants";
 
 interface Options {
-    key: string;
     mnemonic?: string;
     balance?: string;
     accounts?: number;
@@ -16,9 +15,7 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 const bootstrap = async (networks: string[], options: Options) => {
     for (const network of networks) {
-        await fork(network, {
-            key: options.key,
-        });
+        await fork(network, {});
     }
     await sleep(Number(options.wait || 7) * 1000);
     console.log("🔥 Networks forked");
