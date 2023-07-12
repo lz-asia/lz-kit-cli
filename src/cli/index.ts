@@ -21,7 +21,6 @@ async function main() {
         .command("fork")
         .description("Fork a mainnet network")
         .argument("<network>", "network to fork (e.g. ethereum)")
-        .requiredOption("-k, --key <string>", "infura api key")
         .option("--chain-id <number>", "chain ID of forked network")
         .option("--port <number>", "port of json rpc")
         .action(fork);
@@ -36,7 +35,6 @@ async function main() {
         .command("bootstrap")
         .description("Fork and run relayers for given networks")
         .argument("<network...>", "networks to bootstrap")
-        .requiredOption("-k, --key <string>", "infura api key")
         .option("--mnemonic <string>", "mnemonic for accounts")
         .option("--balance <string>", "balance to set for accounts")
         .option("--accounts <number>", "how many accounts to set balance for (default: 1)")

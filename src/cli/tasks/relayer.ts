@@ -1,5 +1,5 @@
 import { normalize } from "path";
-import { Contract, Event } from "ethers";
+import { BigNumber, Contract, Event } from "ethers";
 import { abi as abiNode } from "../../constants/artifacts/UltraLightNodeV2.json";
 import { abi as abiLzApp } from "../../constants/artifacts/LzApp.json";
 import {
@@ -105,7 +105,7 @@ const handleEvent = async (
         }
         const { gasLimit, nativeAmount, nativeAddress } = parseAdapterParams(relayerParamsEvent.args[0]);
         log(stream, src, `event RelayerParams(${gasLimit},${nativeAmount},${nativeAddress})`);
-        if (nativeAmount && nativeAmount > 0 && nativeAddress) {
+        if (nativeAmount && nativeAmount.gt(0) && nativeAddress) {
             const tx = await dest.signer.sendTransaction({ to: nativeAddress, value: nativeAmount });
             log(stream, src, `sent ${utils.formatEther(nativeAmount)} to ${nativeAddress}`);
             log(stream, dest.name, tx.hash);
@@ -134,7 +134,7 @@ const handleEvent = async (
 
 const parsePacket = (data: string) => {
     const parser = new HexParser(data);
-    const nonce = parser.nextInt(8);
+    const nonce = parser.nextBigNumber(8);
     const srcChainId = parser.nextInt(2);
     const srcUA = parser.nextHexString(20);
     const destChainId = parser.nextInt(2);
@@ -146,11 +146,11 @@ const parsePacket = (data: string) => {
 const parseAdapterParams = (adapterParams: string) => {
     const parser = new HexParser(adapterParams);
     const type = parser.nextInt(2);
-    const params: { gasLimit: number; nativeAmount?: number; nativeAddress?: string } = {
-        gasLimit: parser.nextInt(32),
+    const params: { gasLimit: BigNumber; nativeAmount?: BigNumber; nativeAddress?: string } = {
+        gasLimit: parser.nextBigNumber(32),
     };
     if (type == 2) {
-        params.nativeAmount = parser.nextInt(32);
+        params.nativeAmount = parser.nextBigNumber(32);
         params.nativeAddress = parser.nextHexString(20);
     }
     return params;
@@ -173,6 +173,18 @@ class HexParser {
             this.offset = this.hex.length;
         }
         return int;
+    }
+
+    nextBigNumber(bytes?: number) {
+        const bigNumber = BigNumber.from(
+            "0x" + this.hex.substring(this.offset, bytes ? this.offset + bytes * 2 : this.hex.length)
+        );
+        if (bytes) {
+            this.offset += bytes * 2;
+        } else {
+            this.offset = this.hex.length;
+        }
+        return bigNumber;
     }
 
     nextHexString(bytes?: number) {
