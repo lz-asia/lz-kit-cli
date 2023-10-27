@@ -6,10 +6,11 @@ import { program } from "commander";
 import fork from "./tasks/fork";
 import relayer from "./tasks/relayer";
 import bootstrap from "./tasks/bootstrap";
+import setBalance from "./tasks/setBalance";
 import config from "./tasks/config";
 import test from "./tasks/test";
 import deploy from "./tasks/deploy";
-import setBalance from "./tasks/setBalance";
+import run from "./tasks/run";
 
 const getVersion = () => {
     const { version } = JSON.parse(fs.readFileSync(normalize(__dirname + "/../../package.json"), "utf8"));
@@ -71,6 +72,14 @@ async function main() {
         .option("--deploy", "if set, deploy and configure contracts")
         .option("--config <name...>", "LZApp name(s) for config")
         .action(test);
+    program
+        .command("run")
+        .description("Run a script for combinations of networks (from source to destination)")
+        .argument("<path>", "script to run")
+        .requiredOption("-n, --networks <network...>", "list of networks to iterate")
+        .option("--mnemonic <string>", "mnemonic for accounts")
+        .option("--compile", "if set, compile first before each run of scripts")
+        .action(run);
 
     program.parse();
 }

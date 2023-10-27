@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import { WriteStream } from "fs";
 
 export const execute = (command: string, env: Record<string, string> = {}) =>
-    new Promise<number>(resolve => {
+    new Promise<number>((resolve, reject) => {
         const [path, ...args] = command.split(" ");
         const child = spawn(path, args, {
             env: {
@@ -13,7 +13,7 @@ export const execute = (command: string, env: Record<string, string> = {}) =>
             shell: true,
         });
         child.stdout?.on("data", data => process.stdout.write(data));
-        child.stderr?.on("data", data => process.stderr.write(data));
+        child.stderr?.on("data", data => reject(data.toString()));
         child.on("exit", (code: number) => {
             resolve(code);
         });

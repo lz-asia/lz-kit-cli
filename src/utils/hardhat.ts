@@ -55,7 +55,7 @@ export const getDeployment = (network: string, contractName: string) => {
 
 export function createProvider(networkName: string, networkConfig: HttpNetworkConfig) {
     const HttpProvider = importProvider<typeof import("hardhat/internal/core/providers/http"), "HttpProvider">(
-        "./http",
+        "hardhat/internal/core/providers/http",
         "HttpProvider"
     );
     const provider = new HttpProvider(networkConfig.url, networkName, networkConfig.httpHeaders, networkConfig.timeout);
@@ -65,7 +65,7 @@ export function createProvider(networkName: string, networkConfig: HttpNetworkCo
     const BackwardsCompatibilityProviderAdapter = importProvider<
         typeof import("hardhat/internal/core/providers/backwards-compatibility"),
         "BackwardsCompatibilityProviderAdapter"
-    >("./backwards-compatibility", "BackwardsCompatibilityProviderAdapter");
+    >("hardhat/internal/core/providers/backwards-compatibility", "BackwardsCompatibilityProviderAdapter");
     return new BackwardsCompatibilityProviderAdapter(wrappedProvider) as EthereumProvider;
 }
 
@@ -74,40 +74,40 @@ function applyProviderWrappers(provider: EIP1193Provider, netConfig: Partial<Net
     const LocalAccountsProvider = importProvider<
         typeof import("hardhat/internal/core/providers/accounts"),
         "LocalAccountsProvider"
-    >("./accounts", "LocalAccountsProvider");
+    >("hardhat/internal/core/providers/accounts", "LocalAccountsProvider");
     const HDWalletProvider = importProvider<
         typeof import("hardhat/internal/core/providers/accounts"),
         "HDWalletProvider"
-    >("./accounts", "HDWalletProvider");
+    >("hardhat/internal/core/providers/accounts", "HDWalletProvider");
     const FixedSenderProvider = importProvider<
         typeof import("hardhat/internal/core/providers/accounts"),
         "FixedSenderProvider"
-    >("./accounts", "FixedSenderProvider");
+    >("hardhat/internal/core/providers/accounts", "FixedSenderProvider");
     const AutomaticSenderProvider = importProvider<
         typeof import("hardhat/internal/core/providers/accounts"),
         "AutomaticSenderProvider"
-    >("./accounts", "AutomaticSenderProvider");
+    >("hardhat/internal/core/providers/accounts", "AutomaticSenderProvider");
 
     const AutomaticGasProvider = importProvider<
         typeof import("hardhat/internal/core/providers/gas-providers"),
         "AutomaticGasProvider"
-    >("./gas-providers", "AutomaticGasProvider");
+    >("hardhat/internal/core/providers/gas-providers", "AutomaticGasProvider");
     const FixedGasProvider = importProvider<
         typeof import("hardhat/internal/core/providers/gas-providers"),
         "FixedGasProvider"
-    >("./gas-providers", "FixedGasProvider");
+    >("hardhat/internal/core/providers/gas-providers", "FixedGasProvider");
     const AutomaticGasPriceProvider = importProvider<
         typeof import("hardhat/internal/core/providers/gas-providers"),
         "AutomaticGasPriceProvider"
-    >("./gas-providers", "AutomaticGasPriceProvider");
+    >("hardhat/internal/core/providers/gas-providers", "AutomaticGasPriceProvider");
     const FixedGasPriceProvider = importProvider<
         typeof import("hardhat/internal/core/providers/gas-providers"),
         "FixedGasPriceProvider"
-    >("./gas-providers", "FixedGasPriceProvider");
+    >("hardhat/internal/core/providers/gas-providers", "FixedGasPriceProvider");
     const ChainIdValidatorProvider = importProvider<
         typeof import("hardhat/internal/core/providers/chainId"),
         "ChainIdValidatorProvider"
-    >("./chainId", "ChainIdValidatorProvider");
+    >("hardhat/internal/core/providers/chainId", "ChainIdValidatorProvider");
 
     if (isResolvedHttpNetworkConfig(netConfig)) {
         const accounts = netConfig.accounts;
