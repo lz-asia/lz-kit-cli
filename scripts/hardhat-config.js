@@ -4,7 +4,7 @@ async function main() {
     BigInt.prototype.toJSON = function () {
         return this.toString();
     };
-    console.log(JSON.stringify(config.networks, null, 2));
+    console.log(JSON.stringify(config, null, 2));
 }
 
 main().catch(e => {

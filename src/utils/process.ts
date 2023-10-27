@@ -19,17 +19,22 @@ export const execute = (command: string, env: Record<string, string> = {}) =>
         });
     });
 
-export const executeBackground = (command: string, stream?: WriteStream) => {
+export const executeBackground = (command: string, stream?: WriteStream, onInterrupt?: (args?: unknown[]) => void) => {
     const [path, ...args] = command.split(" ");
     const child = spawn(path, args, {
         shell: true,
         detached: true,
     });
     child.stdout?.on("data", data => stream?.write(data) || process.stdout.write(data));
-    child.stderr?.on("data", data => stream?.write(data) || process.stderr.write(data));
-    [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach(eventType => {
-        process.on(eventType, () => {
+    child.stdout?.on("error", error => stream?.write(error) || process.stdout.write(error.stack || ""));
+    child.stderr?.on("data", data => stream?.write(data) || process.stdout.write(data));
+    child.stderr?.on("error", error => stream?.write(error) || process.stderr.write(error.stack || ""));
+    [`exit`, `SIGINT`, `SIGUSR1`, `SIGUSR2`, `uncaughtException`, `SIGTERM`].forEach(interrupt => {
+        process.on(interrupt, (...args: unknown[]) => {
             child.kill();
+            if (interrupt !== "exit") {
+                onInterrupt?.(args);
+            }
         });
     });
 };

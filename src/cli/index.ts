@@ -9,6 +9,7 @@ import bootstrap from "./tasks/bootstrap";
 import config from "./tasks/config";
 import test from "./tasks/test";
 import deploy from "./tasks/deploy";
+import setBalance from "./tasks/setBalance";
 
 const getVersion = () => {
     const { version } = JSON.parse(fs.readFileSync(normalize(__dirname + "/../../package.json"), "utf8"));
@@ -40,6 +41,14 @@ async function main() {
         .option("--accounts <number>", "how many accounts to set balance for (default: 1)")
         .option("--wait <number>", "seconds to wait for forks to finish (default: 7)")
         .action(bootstrap);
+    program
+        .command("set-balance")
+        .description("Fork and run relayers for given networks")
+        .argument("<amount>", "balance to set for accounts")
+        .requiredOption("-n, --networks <network...>", "networks to set balances on")
+        .option("--mnemonic <string>", "mnemonic for accounts")
+        .option("--accounts <number>", "how many accounts to set balance for (default: 1)")
+        .action(setBalance);
     program
         .command("config")
         .description("Set trustedRemotes for deployed LZApp contracts")

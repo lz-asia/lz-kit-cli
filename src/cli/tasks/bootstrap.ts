@@ -1,8 +1,7 @@
-import { normalize } from "path";
 import fork from "./fork";
 import relayer from "./relayer";
-import { execute } from "../../utils";
-import { DEFAULT_MNEMONIC } from "../../constants";
+import setBalance from "./setBalance";
+import { sleep } from "../../utils";
 
 interface Options {
     mnemonic?: string;
@@ -10,8 +9,6 @@ interface Options {
     accounts?: number;
     wait?: number;
 }
-
-const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 const bootstrap = async (networks: string[], options: Options) => {
     for (const network of networks) {
@@ -28,20 +25,13 @@ const bootstrap = async (networks: string[], options: Options) => {
     console.log("🔥 All relayers are up");
 
     if (options.balance) {
-        for (const network of networks) {
-            console.log("⌛️ Setting balance for " + network + "-fork...");
-            const code = await execute(
-                `hardhat run --no-compile ${normalize(__dirname + "/../../../scripts/set-balance.js")}`,
-                {
-                    NETWORK: network + "-fork",
-                    MNEMONIC: options.mnemonic || DEFAULT_MNEMONIC,
-                    BALANCE: options.balance,
-                    ACCOUNTS: String(options.accounts || 1),
-                }
-            );
-            if (code > 0) return;
-        }
+        await setBalance(options.balance, {
+            networks: networks.map(n => n + "-fork"),
+            mnemonic: options.mnemonic,
+            accounts: options.accounts,
+        });
     }
+    console.log("🔥 All balances are set");
 
     console.log();
     console.log("===============================================================================");

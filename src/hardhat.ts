@@ -3,32 +3,42 @@ import { join } from "path";
 import { BigNumberish, Contract, providers, Signer, utils } from "ethers";
 import { extendConfig, extendEnvironment } from "hardhat/config";
 import { EthereumProvider, HardhatConfig, HardhatRuntimeEnvironment } from "hardhat/types";
-import { createProvider } from "hardhat/internal/core/providers/construction";
 import { DEFAULT_MNEMONIC } from "./constants";
 import { Chain } from "./type-extensions";
 import "./type-extensions";
-import { getDeployment, getImpersonatedSigner as _getImpersonatedSigner } from "./utils";
+import { createProvider, getDeployment, getImpersonatedSigner as _getImpersonatedSigner } from "./utils";
 
-const dir = "hardhat-configs";
-if (fs.existsSync(dir)) {
-    extendConfig((config: HardhatConfig) => {
-        for (const file of fs.readdirSync(dir).filter(file => file.endsWith(".config.json"))) {
-            const network = JSON.parse(fs.readFileSync(join(dir, file), { encoding: "utf-8" })).networks.localhost;
-            config.networks[file.substring(0, file.length - 12)] = {
-                ...network,
-                accounts: process.env.LZ_KIT_MNEMONIC
-                    ? {
-                          mnemonic: process.env.LZ_KIT_MNEMONIC || DEFAULT_MNEMONIC,
-                      }
-                    : network.accounts,
-            };
-        }
+(function () {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const ctx = global.__hardhatContext;
+    if (!ctx?.environmentExtenders) {
+        console.error("⚠️ Error: This version of hardhat is not supported so upgrade your hardhat >= 2.16.0");
+        process.exit(0);
+    }
+
+    const dir = "hardhat-configs";
+    if (fs.existsSync(dir)) {
+        extendConfig((config: HardhatConfig) => {
+            config.lzKitEnabled = true;
+            for (const file of fs.readdirSync(dir).filter(file => file.endsWith(".config.json"))) {
+                const network = JSON.parse(fs.readFileSync(join(dir, file), { encoding: "utf-8" })).networks.localhost;
+                config.networks[file.substring(0, file.length - 12)] = {
+                    ...network,
+                    accounts: process.env.LZ_KIT_MNEMONIC
+                        ? {
+                              mnemonic: process.env.LZ_KIT_MNEMONIC || DEFAULT_MNEMONIC,
+                          }
+                        : network.accounts,
+                };
+            }
+        });
+    }
+
+    extendEnvironment(hre => {
+        hre.getChain = async (name: string) => await getChain(hre, name);
     });
-}
-
-extendEnvironment(hre => {
-    hre.getChain = async (name: string) => await getChain(hre, name);
-});
+})();
 
 const getChain = async (hre: HardhatRuntimeEnvironment, name: string) => {
     const config = hre.config.networks[name];

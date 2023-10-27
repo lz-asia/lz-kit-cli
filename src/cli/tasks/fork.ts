@@ -26,7 +26,16 @@ const fork = async (network: string, options: Options) => {
         const configFile = normalize(dir + "/" + network + "-fork.config.json");
         fs.writeFileSync(configFile, JSON.stringify(config, null, 2), { flag: "w", encoding: "utf-8" });
         const { file, stream } = createWriteStream(".logs/forks", network + "-fork.log");
-        executeBackground(`hardhat node --config ${configFile} --port ${port}`, stream);
+        executeBackground(`hardhat node --config ${configFile} --port ${port}`, stream, args => {
+            if (String(args?.[0]).includes("limit exceeded")) {
+                console.log(
+                    "⚠️ Error: one of forked networks was shut down because of usage limit exceeded. Check log files under .logs/forks/"
+                );
+                process.exit(1);
+            } else {
+                console.log(`⚠️ Error: network ${network}-fork was interrupted (${args?.join(", ") || ""})`);
+            }
+        });
         console.log("Forked " + network + ": " + config.networks.localhost.url + ", check logs at " + file);
     } catch (e) {
         console.trace(e);

@@ -4,6 +4,8 @@ let start = 0;
 let loader: Loading;
 let timer: NodeJS.Timer;
 
+export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
 const elapsed = () => {
     const elapsed = Date.now() - start;
     const hh = Math.floor(elapsed / 1000 / 3600);
