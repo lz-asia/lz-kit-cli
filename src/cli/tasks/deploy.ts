@@ -1,10 +1,12 @@
 import { execute } from "../../utils";
 import config from "./config";
+import run from "./run";
 
 interface Options {
     networks: string[];
     mnemonic?: string;
     config?: string[];
+    run?: string[];
 }
 
 const deploy = async (options: Options) => {
@@ -28,6 +30,16 @@ const deploy = async (options: Options) => {
                 mnemonic: options.mnemonic,
             });
             console.log("🔥 Configuration done");
+        }
+
+        if (options.run) {
+            console.log("⌛️ Executing scripts...");
+            for (const script of options.run) {
+                await run(script, {
+                    networks: options.networks,
+                    mnemonic: options.mnemonic,
+                });
+            }
         }
     } catch (e) {
         console.trace(e);

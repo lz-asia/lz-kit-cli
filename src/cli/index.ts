@@ -63,6 +63,7 @@ async function main() {
         .requiredOption("-n, --networks <network...>", "networks to config")
         .option("--mnemonic <string>", "mnemonic for accounts")
         .option("--config <name...>", "LZApp name(s) for config")
+        .option("--run <script...>", "scripts to run after deploy")
         .action(deploy);
     program
         .command("test")
@@ -75,7 +76,7 @@ async function main() {
     program
         .command("run")
         .description("Run a script for combinations of networks (from source to destination)")
-        .argument("<path>", "script to run")
+        .argument("<script>", "script to run")
         .requiredOption("-n, --networks <network...>", "list of networks to iterate")
         .option("--mnemonic <string>", "mnemonic for accounts")
         .option("--compile", "if set, compile first before each run of scripts")

@@ -9,7 +9,7 @@ interface Options {
 
 const run = async (script: string, options: Options) => {
     for (const src of options.networks) {
-        console.log("📜 Running script on " + src + "...");
+        console.log(`📜 Running ${script} on ` + src + "...");
         for (const dest of options.networks) {
             if (src == dest) continue;
             try {
