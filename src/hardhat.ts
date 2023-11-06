@@ -110,6 +110,10 @@ const getChain = async (hre: HardhatRuntimeEnvironment, name: string) => {
         return new Contract(address, abi, signer || provider) as T;
     };
 
+    const setBalance = async (address: string, balance: BigNumberish) => {
+        await provider.send("hardhat_setBalance", [address, utils.hexValue(balance)]);
+    };
+
     return {
         name,
         config,
@@ -123,6 +127,7 @@ const getChain = async (hre: HardhatRuntimeEnvironment, name: string) => {
         getImpersonatedSigner,
         getContract,
         getContractAt,
+        setBalance,
     } as Chain;
 };
 

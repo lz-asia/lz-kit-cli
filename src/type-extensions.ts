@@ -31,6 +31,7 @@ export interface Chain {
     getImpersonatedSigner: (address: string, balance?: BigNumberish) => Promise<SignerWithAddress>;
     getContract: <T extends Contract>(name: string, signer?: Signer) => Promise<T>;
     getContractAt: <T extends Contract>(nameOrAbi: string | unknown[], address: string, signer?: Signer) => Promise<T>;
+    setBalance: (address: string, balance: BigNumberish) => Promise<void>;
 }
 
 declare module "hardhat/types/config" {
