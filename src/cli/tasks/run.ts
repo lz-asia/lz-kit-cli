@@ -1,4 +1,4 @@
-import { execute } from "../../utils";
+import { execute } from "../../internal";
 import { DEFAULT_MNEMONIC } from "../../constants";
 
 interface Options {

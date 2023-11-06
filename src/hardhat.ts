@@ -6,7 +6,14 @@ import { EthereumProvider, HardhatConfig, HardhatRuntimeEnvironment } from "hard
 import { DEFAULT_MNEMONIC } from "./constants";
 import { Chain } from "./type-extensions";
 import "./type-extensions";
-import { createProvider, getDeployment, getImpersonatedSigner as _getImpersonatedSigner } from "./utils";
+import {
+    createProvider,
+    getDeployment,
+    getEndpointAddress,
+    getForkedNetwork,
+    getImpersonatedSigner as _getImpersonatedSigner,
+    getLZChainId,
+} from "./internal";
 
 (function () {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -45,6 +52,11 @@ const getChain = async (hre: HardhatRuntimeEnvironment, name: string) => {
     if (!config) throw new Error("Cannot find network " + name);
     if (!("url" in config)) throw new Error("Missing 'url' for network " + name);
     const provider = new EthereumProviderWrapper(createProvider(name, config), config.url, config.chainId);
+    const forkedNetwork = await getForkedNetwork(provider);
+    const lzChainId = await getLZChainId(
+        getEndpointAddress(forkedNetwork?.chainId || provider.network.chainId),
+        provider
+    );
 
     const takeSnapshot = async () => {
         const id = (await provider.send("evm_snapshot", [])) as string;
@@ -102,6 +114,8 @@ const getChain = async (hre: HardhatRuntimeEnvironment, name: string) => {
         name,
         config,
         provider,
+        forkedNetwork,
+        lzChainId,
         snapshot,
         takeSnapshot,
         getSigners,

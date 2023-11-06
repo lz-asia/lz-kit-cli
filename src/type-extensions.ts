@@ -12,10 +12,18 @@ export interface Snapshot {
     id: string;
 }
 
+export interface ForkedNetwork {
+    chainId: number;
+    forkBlockNumber: number;
+    forkBlockHash: string;
+}
+
 export interface Chain {
     name: string;
     config: HttpNetworkConfig;
     provider: providers.JsonRpcProvider;
+    forkedNetwork?: ForkedNetwork;
+    lzChainId: number;
     snapshot: Snapshot;
     takeSnapshot: () => Promise<Snapshot>;
     getSigners: () => Promise<Array<SignerWithAddress>>;

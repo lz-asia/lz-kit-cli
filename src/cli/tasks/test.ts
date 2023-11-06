@@ -1,5 +1,5 @@
 import { DEFAULT_MNEMONIC } from "../../constants";
-import { execute } from "../../utils";
+import { execute } from "../../internal";
 import deploy from "./deploy";
 
 interface Options {

@@ -8,7 +8,7 @@ import {
     getForkedChainId,
     getHardhatNetworkConfig,
     getLZChainId,
-} from "../../utils";
+} from "../../internal";
 import { Contract, providers, utils, Wallet } from "ethers";
 
 interface Options {

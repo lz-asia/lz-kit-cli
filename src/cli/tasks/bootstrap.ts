@@ -1,7 +1,7 @@
 import fork from "./fork";
 import relayer from "./relayer";
 import setBalance from "./setBalance";
-import { sleep } from "../../utils";
+import { sleep } from "../../internal";
 
 interface Options {
     mnemonic?: string;

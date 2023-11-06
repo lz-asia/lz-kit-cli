@@ -1,10 +1,5 @@
 import { BigNumberish, providers, utils } from "ethers";
-
-interface ForkedNetwork {
-    chainId: number;
-    forkBlockNumber: number;
-    forkBlockHash: string;
-}
+import { ForkedNetwork } from "../type-extensions";
 
 export const getForkedChainId = async (provider: providers.JsonRpcProvider, fallback = true) => {
     let chainId = (await getForkedNetwork(provider))?.chainId;

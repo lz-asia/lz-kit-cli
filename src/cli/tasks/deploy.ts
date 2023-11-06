@@ -1,4 +1,4 @@
-import { execute } from "../../utils";
+import { execute } from "../../internal";
 import config from "./config";
 import run from "./run";
 

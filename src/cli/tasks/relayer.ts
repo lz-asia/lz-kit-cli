@@ -10,7 +10,7 @@ import {
     createWriteStream,
     getNodeContract,
     getForkedChainId,
-} from "../../utils";
+} from "../../internal";
 import { providers, utils } from "ethers";
 import { WriteStream } from "fs";
 

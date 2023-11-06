@@ -1,5 +1,5 @@
 import { DEFAULT_MNEMONIC } from "../../constants";
-import { getHardhatNetworkConfig, sleep } from "../../utils";
+import { getHardhatNetworkConfig, sleep } from "../../internal";
 import { providers, utils, Wallet } from "ethers";
 
 interface Options {

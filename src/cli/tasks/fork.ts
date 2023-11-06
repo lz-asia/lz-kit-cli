@@ -3,8 +3,8 @@ import { normalize } from "path";
 import { NetworksConfig } from "hardhat/types";
 import { providers } from "ethers";
 import { BASE_FORKED_CHAIN_ID } from "../../constants";
-import { getHardhatNetworkConfig, createWriteStream, getChainId } from "../../utils";
-import { executeBackground } from "../../utils";
+import { getHardhatNetworkConfig, createWriteStream, getChainId } from "../../internal";
+import { executeBackground } from "../../internal";
 
 interface Options {
     chainId?: number;
