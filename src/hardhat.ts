@@ -27,7 +27,7 @@ import {
     const dir = "hardhat-configs";
     if (fs.existsSync(dir)) {
         extendConfig((config: HardhatConfig) => {
-            config.lzKitEnabled = true;
+            // config.lzKitEnabled = true;
             for (const file of fs.readdirSync(dir).filter(file => file.endsWith(".config.json"))) {
                 const network = JSON.parse(fs.readFileSync(join(dir, file), { encoding: "utf-8" })).networks.localhost;
                 config.networks[file.substring(0, file.length - 12)] = {

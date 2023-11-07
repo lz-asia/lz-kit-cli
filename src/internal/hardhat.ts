@@ -22,12 +22,12 @@ export const getHardhatConfig = () => {
     const end = data.lastIndexOf("}");
     if (start === -1 || end === -1) process.exit(1);
     cachedConfig = JSON.parse(data.substring(start, end + 1)) as HardhatConfig;
-    if (!cachedConfig.lzKitEnabled) {
-        console.error(
-            "⚠️ Error: 'require(\"@lz-kit/cli/hardhat\")' or 'import \"@lz-kit/cli/hardhat\";' is missing in hardhat.config.(js|ts)"
-        );
-        process.exit(1);
-    }
+    // if (!cachedConfig.lzKitEnabled) {
+    //     console.error(
+    //         "⚠️ Error: 'require(\"@lz-kit/cli/hardhat\")' or 'import \"@lz-kit/cli/hardhat\";' is missing in hardhat.config.(js|ts)"
+    //     );
+    //     process.exit(1);
+    // }
     return cachedConfig;
 };
 

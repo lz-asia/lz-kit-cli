@@ -35,9 +35,9 @@ export interface Chain {
 }
 
 declare module "hardhat/types/config" {
-    export interface HardhatConfig {
-        lzKitEnabled?: boolean;
-    }
+    // export interface HardhatConfig {
+    //     lzKitEnabled?: boolean;
+    // }
 }
 
 declare module "hardhat/types/runtime" {
