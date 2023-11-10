@@ -12,6 +12,7 @@ import { Deployment } from "hardhat-deploy/dist/types";
 import { EIP1193Provider, NetworkConfig } from "hardhat/src/types";
 
 let cachedConfig: HardhatConfig | undefined = undefined;
+const cachedDeployments: { [network: string]: { [contractName: string]: Deployment } } = {};
 
 export const getHardhatConfig = () => {
     if (cachedConfig) return cachedConfig;
@@ -46,11 +47,20 @@ export const getHardhatNetworkConfig = (name: string) => {
 };
 
 export const getDeployment = (network: string, contractName: string) => {
+    if (cachedDeployments[network]) {
+        const cached = cachedDeployments[network][contractName];
+        if (cached) return cached;
+    } else {
+        cachedDeployments[network] = {};
+    }
+
     const path = normalize("deployments/" + network + "/" + contractName + ".json");
     if (!fs.existsSync(path)) {
         throw new Error("Cannot find deployment in " + network + " for " + contractName);
     }
-    return JSON.parse(fs.readFileSync(path, { encoding: "utf-8" })) as Deployment;
+    const deployment = JSON.parse(fs.readFileSync(path, { encoding: "utf-8" })) as Deployment;
+    cachedDeployments[network][contractName] = deployment;
+    return deployment;
 };
 
 export function createProvider(networkName: string, networkConfig: HttpNetworkConfig) {

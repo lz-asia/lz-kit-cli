@@ -8,7 +8,7 @@ import { Chain } from "./type-extensions";
 import "./type-extensions";
 import {
     createProvider,
-    getDeployment,
+    getDeployment as _getDeployment,
     getEndpointAddress,
     getForkedNetwork,
     getImpersonatedSigner as _getImpersonatedSigner,
@@ -87,8 +87,21 @@ const getChain = async (hre: HardhatRuntimeEnvironment, name: string) => {
         return await SignerWithAddress.create(signer);
     };
 
+    const isDeployed = async (contractName: string) => {
+        try {
+            _getDeployment(name, contractName);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    const getDeployment = async (contractName: string) => {
+        return _getDeployment(name, contractName);
+    };
+
     const getContract = async <T extends Contract>(contractName: string, signer?: Signer) => {
-        const { address, abi } = getDeployment(name, contractName);
+        const { address, abi } = _getDeployment(name, contractName);
         return new Contract(address, abi, signer || provider) as T;
     };
 
@@ -125,6 +138,8 @@ const getChain = async (hre: HardhatRuntimeEnvironment, name: string) => {
         getSigners,
         getSigner,
         getImpersonatedSigner,
+        isDeployed,
+        getDeployment,
         getContract,
         getContractAt,
         setBalance,

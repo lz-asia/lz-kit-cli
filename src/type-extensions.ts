@@ -2,6 +2,7 @@ import "hardhat/types/config";
 import "hardhat/types/runtime";
 import { BigNumberish, Contract, providers, Signer } from "ethers";
 import { HttpNetworkConfig } from "hardhat/types";
+import { Deployment } from "hardhat-deploy/dist/types";
 
 export interface SignerWithAddress extends Signer {
     address: string;
@@ -29,6 +30,8 @@ export interface Chain {
     getSigners: () => Promise<Array<SignerWithAddress>>;
     getSigner: (address: string) => Promise<SignerWithAddress>;
     getImpersonatedSigner: (address: string, balance?: BigNumberish) => Promise<SignerWithAddress>;
+    isDeployed: (name: string) => Promise<boolean>;
+    getDeployment: (name: string) => Promise<Deployment>;
     getContract: <T extends Contract>(name: string, signer?: Signer) => Promise<T>;
     getContractAt: <T extends Contract>(nameOrAbi: string | unknown[], address: string, signer?: Signer) => Promise<T>;
     setBalance: (address: string, balance: BigNumberish) => Promise<void>;
