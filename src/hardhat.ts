@@ -1,10 +1,10 @@
 import fs from "fs";
 import { join } from "path";
-import { BigNumberish, Contract, providers, Signer, utils } from "ethers";
+import { BigNumberish, Contract, Event, providers, Signer, utils } from "ethers";
 import { extendConfig, extendEnvironment } from "hardhat/config";
 import { EthereumProvider, HardhatConfig, HardhatRuntimeEnvironment } from "hardhat/types";
 import { DEFAULT_MNEMONIC } from "./constants";
-import { Chain } from "./type-extensions";
+import { Chain, ContractEvent } from "./type-extensions";
 import "./type-extensions";
 import {
     createProvider,
@@ -44,6 +44,23 @@ import {
 
     extendEnvironment(hre => {
         hre.getChain = async (name: string) => await getChain(hre, name);
+        hre.waitForMessageRelayed = async <T extends Event>(
+            eventSuccess: ContractEvent,
+            eventFailure: ContractEvent,
+            timeout?: number
+        ) => {
+            return new Promise<T>((resolve, reject) => {
+                eventSuccess.contract.once(eventSuccess.event, (...args) => {
+                    resolve(args[args.length - 1] as T);
+                });
+                eventFailure.contract.once(eventFailure.event, (...args) => {
+                    reject(args[args.length - 1]);
+                });
+                setTimeout(() => {
+                    reject(new Error("Relayer timeout"));
+                }, timeout || 10_000);
+            });
+        };
     });
 })();
 

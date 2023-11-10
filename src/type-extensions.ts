@@ -1,6 +1,6 @@
 import "hardhat/types/config";
 import "hardhat/types/runtime";
-import { BigNumberish, Contract, providers, Signer } from "ethers";
+import { BigNumberish, Contract, Event, EventFilter, providers, Signer } from "ethers";
 import { HttpNetworkConfig } from "hardhat/types";
 import { Deployment } from "hardhat-deploy/dist/types";
 
@@ -37,6 +37,11 @@ export interface Chain {
     setBalance: (address: string, balance: BigNumberish) => Promise<void>;
 }
 
+export interface ContractEvent {
+    contract: Contract;
+    event: string | EventFilter;
+}
+
 declare module "hardhat/types/config" {
     // export interface HardhatConfig {
     //     lzKitEnabled?: boolean;
@@ -46,5 +51,10 @@ declare module "hardhat/types/config" {
 declare module "hardhat/types/runtime" {
     export interface HardhatRuntimeEnvironment {
         getChain: (name: string) => Promise<Chain | undefined>;
+        waitForMessageRelayed: <T extends Event>(
+            eventSuccess: ContractEvent,
+            eventFailure: ContractEvent,
+            timeout?: number
+        ) => Promise<T>;
     }
 }
